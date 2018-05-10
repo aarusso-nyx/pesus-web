@@ -1,0 +1,40 @@
+<mat-drawer-container >
+  <mat-drawer mode="side" opened="true">
+      
+      <mat-list>
+      
+          <mat-list-item>
+    <a routerLinkActive="active" routerLink="people"    
+       aria-label="Mapas" mat-tooltip="Mapas">Pessoas</a>
+          </mat-list-item>
+    
+          <mat-list-item>
+    <a routerLinkActive="active" routerLink="vessels" 
+       aria-label="Viagens" mat-tooltip="Viagens">Barcos</a>
+          </mat-list-item>
+    
+          <mat-list-item>
+    <a routerLinkActive="active" routerLink="fishes"  
+       aria-label="Configuração" mat-tooltip="Configuração">Peixes</a>
+          </mat-list-item>
+    
+          <mat-list-item>
+    <a routerLinkActive="active" routerLink="areas"    
+       aria-label="Mapas" mat-tooltip="Mapas">Áreas</a>
+          </mat-list-item>
+      
+          <mat-list-item>
+    <a routerLinkActive="active" routerLink="alarms" 
+       aria-label="Viagens" mat-tooltip="Viagens">Alarmes</a>
+          </mat-list-item>
+      </mat-list>
+      
+      
+      
+    </mat-drawer>
+  <mat-drawer-content fxFlexFill>
+    <p>dsfhiasdfhiasdhfklasdjh</p>
+<!--      <router-outlet></router-outlet>-->
+<router-outlet></router-outlet>
+    </mat-drawer-content>
+</mat-drawer-container>

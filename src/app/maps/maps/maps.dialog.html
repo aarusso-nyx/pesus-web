@@ -1,0 +1,30 @@
+<h1 matDialogTitle fxLayout="row" fxLayoutAlign="start center">
+    <mat-icon>{{data.icon}}</mat-icon>
+    <span fxFlexOffset="1em">Notificações de {{data.eventtype_desc}} - {{data.geo_name}}</span>
+</h1>
+<mat-dialog-content>
+    <mat-list>
+        <mat-list-item>
+            <strong fxFlex="10%"></strong>
+            <strong fxFlex="30%">Situação</strong>
+            <strong fxFlex="25%">Prioridade</strong>
+            <strong fxFlex="35%">Informado em </strong>
+            <strong fxFlex></strong>
+        </mat-list-item>
+
+        <mat-list-item *ngFor="let e of events">
+            <span fxFlex="10%">
+                <a mat-icon-button [routerLink]="['/event/'+e.event_id]"
+                   matTooltip="Detalhes">
+                    <mat-icon>more_horiz</mat-icon></a>                
+            </span>
+            
+            <span fxFlex="30%">{{e.status.eventstatus_desc}}</span>
+            <span fxFlex="25%">{{e.severity.severity_desc}}</span>
+            <span fxFlex="35%">{{e.created_at | date:'medium'}}</span>
+        </mat-list-item>
+    </mat-list>
+</mat-dialog-content>
+<mat-dialog-actions fxFlexAlign="end" fxLayout="row" fxLayoutAlign="end">
+    <button [matDialogClose]>Fechar</button>
+</mat-dialog-actions>
