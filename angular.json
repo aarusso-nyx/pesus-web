@@ -13,7 +13,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "outputPath": "dist/pesca",
+            "outputPath": "dist",
             "index": "src/index.html",
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
@@ -55,7 +55,13 @@
         "serve": {
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
-            "browserTarget": "pesca:build"
+            "browserTarget": "pesca:build",
+            "host": "0.0.0.0",  
+            "publicHost": "thiamat.nyxk.com.br",  
+            "ssl": true,
+            "sslCert": "/etc/ssl/live/leviathan.nyxk.com.br/cert.pem",
+            "sslKey": "/etc/ssl/live/leviathan.nyxk.com.br/privkey.pem"
+  
           },
           "configurations": {
             "production": {

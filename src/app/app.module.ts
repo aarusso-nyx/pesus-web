@@ -1,5 +1,6 @@
 import { BrowserModule }            from '@angular/platform-browser';
-import { NgModule }                 from '@angular/core';
+import { NgModule, 
+         LOCALE_ID }                from '@angular/core';
 import { ServiceWorkerModule }      from '@angular/service-worker';
 import { BrowserAnimationsModule }  from '@angular/platform-browser/animations';
 
@@ -7,6 +8,24 @@ import { ReactiveFormsModule,
          FormsModule }              from '@angular/forms';
 import { HttpClientModule }         from '@angular/common/http';
 
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+// DateTime stuff
+import { DatePipe }                 from '@angular/common';
+import { registerLocaleData } from '@angular/common';
+import localePt from '@angular/common/locales/pt';
+import localePtExtra from '@angular/common/locales/extra/pt';
+
+registerLocaleData(localePt, 'pt', localePtExtra);
+
+ import { OwlDateTimeModule, 
+          OwlNativeDateTimeModule,
+          OwlDateTimeIntl,
+          OWL_DATE_TIME_LOCALE    } from 'ng-pick-datetime';
+
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 import { FlexLayoutModule }         from "@angular/flex-layout";
 import { MatButtonModule, 
          MatButtonToggleModule, 
@@ -35,55 +54,65 @@ import { MatButtonModule,
          MatTableModule,
          MatTabsModule,
          MatToolbarModule,
-         MatTooltipModule }         from '@angular/material';
+         MatTooltipModule,
+       MAT_DATE_LOCALE }         from '@angular/material';
+
+import { JwtModule } from '@auth0/angular-jwt';
+
+export function tokenGetter() { 
+    return localStorage.getItem('access_token');
+}
 
 
+import { environment           } from '../environments/environment';
 
+import { AuthGuard             } from './auth/auth.guard';
+import { AuthService           } from './auth/auth.service';
+import { AuthDirective         } from './auth/auth.directive';
+import { LoginComponent,
+         CallbackComponent     } from './auth/auth.component';
 
-import { environment } from '../environments/environment';
+import { AppRoutingModule      } from './app-routing.module';
+import { AppComponent          } from './app.component';
+import { LatLonPipe            } from './pipes/lat-lon.pipe';
+import { MapsComponent, 
+         MapDialog             } from './maps/maps.component';
 
-import { AppRoutingModule } from './app-routing.module';
-import { AppComponent } from './app.component';
+import { ConfirmDialog         } from './dialogs/confirm.dialog';
 
-
-import { ConfigComponent        } from './config/config/config.component';
-import { PeopleConfigComponent        } from './config/people/people.component';
-import { PeopleDetailComponent        } from './config/people-detail/people-detail.component';
-import { VesselConfigComponent        } from './config/vessel/vessel.component';
-import { VesselDetailComponent        } from './config/vessel-detail/vessel-detail.component';
-import { AlarmConfigComponent        } from './config/alarm/alarm.component';
-import { AlarmDetailComponent        } from './config/alarm-detail/alarm-detail.component';
-import { AreaConfigComponent        } from './config/area/area.component';
-import { AreaDetailComponent        } from './config/area-detail/area-detail.component';
-import { FishConfigComponent        } from './config/fish/fish.component';
-import { FishDetailComponent        } from './config/fish-detail/fish-detail.component';
-import { VoyagesComponent        } from './voyages/voyages/voyages.component';
-import { MapComponent        } from './maps/map/map.component';
+import { ClientComponent       } from './config/client/client.component';
+import { VesselListComponent,
+         VesselEditComponent   } from './config/vessel/vessel.component';
+import { PeopleListComponent,
+         PeopleEditComponent   } from './config/people/people.component';
+import { VoyageListComponent,
+         VoyageEditComponent   } from './voyages/voyages.component';
+                
 
 @NgModule({
   declarations: [
     AppComponent,
-      ConfigComponent,
-      PeopleConfigComponent,
-      PeopleDetailComponent,
-      VesselConfigComponent,
-      VesselDetailComponent,
-      AlarmConfigComponent,
-      AlarmDetailComponent,
-      AreaConfigComponent,
-      AreaDetailComponent,
-      FishConfigComponent,
-      FishDetailComponent,
-      VoyagesComponent,
-      MapComponent,
-      
+    ClientComponent,
+    LoginComponent,
+    CallbackComponent,
+    PeopleListComponent,
+    PeopleEditComponent,
+    VesselListComponent,
+    VesselEditComponent,
+    VoyageListComponent,
+    VoyageEditComponent,
+    MapsComponent,
+    MapDialog,
+    LatLonPipe,
+    AuthDirective,
+    ConfirmDialog,
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     ServiceWorkerModule.register('/ngsw-worker.js', { enabled: environment.production }),
     BrowserAnimationsModule,
-      
+    FlexLayoutModule,
     FormsModule,
     ReactiveFormsModule,
     HttpClientModule,
@@ -115,8 +144,32 @@ import { MapComponent        } from './maps/map/map.component';
     MatTooltipModule,
     MatNativeDateModule, 
     MatRippleModule,
+    JwtModule.forRoot({
+                config: {
+                tokenGetter: tokenGetter,
+                throwNoTokenError: true, 
+                whitelistedDomains: [environment.baseHost]
+                }
+    }),
+
+    OwlDateTimeModule, 
+    OwlNativeDateTimeModule,
   ],
-  providers: [],
+    
+  entryComponents: [
+    ConfirmDialog
+  ],    
+    
+  providers: [
+    { provide: LOCALE_ID, useValue: 'pt' },
+    { provide: MAT_DATE_LOCALE, useValue: 'pt-BR'},
+    { provide: OWL_DATE_TIME_LOCALE, useValue: 'pt'},
+      AuthService,
+      AuthGuard,
+      MapDialog,
+      LatLonPipe,
+      DatePipe,
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

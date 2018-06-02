@@ -1,0 +1,19 @@
+<mat-drawer-container>
+    <mat-drawer mode="side" [opened]="!opened">
+        <mat-nav-list fxLayout="column">
+            <a class="item"  fxFlex fxLayoutAlign="start center" [routerLink]="'new'">
+                <mat-icon>add</mat-icon>
+                <span>Nova Embarcação</span>
+            </a>
+            <mat-divider></mat-divider>
+            <a fxFlex class="item" 
+               matButton 
+               routerLinkActive="active"
+               [routerLink]="v.vessel_id" 
+               *ngFor="let v of vessels">{{v.vessel_name}}</a>
+        </mat-nav-list>
+    </mat-drawer>
+    <mat-drawer-content>
+        <router-outlet></router-outlet>
+    </mat-drawer-content>
+</mat-drawer-container>

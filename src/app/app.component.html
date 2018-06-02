@@ -1,20 +1,45 @@
-<mat-toolbar color="primary">    
+<mat-toolbar color="primary" fxFlex fxLayout="row">
+    <ng-container *ngIf="auth.isAuthenticated()">
     <a mat-icon-button routerLinkActive="active" routerLink="/map"    
-       aria-label="Mapas" mat-tooltip="Mapas">
+       class="icon" aria-label="Mapas" matTooltip="Mapas">
         <mat-icon>language</mat-icon>
     </a>
-    <a mat-icon-button routerLinkActive="active" routerLink="/voyages" 
-       aria-label="Viagens" mat-tooltip="Viagens">
+    <a mat-icon-button routerLinkActive="active" routerLink="/people" 
+       class="icon" aria-label="Pescadores" matTooltip="Pescadores">
+        <mat-icon>person</mat-icon>
+    </a>
+    <a mat-icon-button routerLinkActive="active" routerLink="/vessels"    
+       class="icon" aria-label="Embarcações" matTooltip="Embarcações">
         <mat-icon>directions_boat</mat-icon>
     </a>
-    <a mat-icon-button routerLinkActive="active" routerLink="/config"  
-       aria-label="Configuração" mat-tooltip="Configuração">
-        <mat-icon>settings</mat-icon>
+    <a mat-icon-button routerLinkActive="active" routerLink="/voyages" 
+       class="icon" aria-label="Produção" matTooltip="Produção">
+        <mat-icon>waves</mat-icon>
     </a>
 
-    <span> CELOX </span>
-    
-    <a mat-icon-button routerLinkActive="active" routerLink="/login" aria-label="Login"><mat-icon>account_circle</mat-icon></a>
-    
+    <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
+        <div fxFlex fxLayoutAlign="center"><span>{{title}}</span></div>
+    </div>
+        
+    <a mat-menu-item routerLinkActive="active" routerLink="/client"    
+        aria-label="Pescadores">
+        <span class="login">{{ profile?.nickname }}</span>
+        <img src="{{profile?.picture}}" class="avatar" alt="avatar">
+    </a>
+    <button mat-icon-button
+            (click)="auth.logout('/login')"   
+                aria-label="Sair" matTooltip="sair">
+        <mat-icon>exit_to_app</mat-icon>
+    </button>
+    </ng-container>
+
+    <ng-container *ngIf="!auth.isAuthenticated()">
+        <span fxFlex class="text-center">Pesca Sustentável</span>
+        <button mat-icon-button
+                (click)="auth.login()"   
+                    aria-label="Entrar" matTooltip="entrar">
+            <mat-icon>play_for_work</mat-icon>
+        </button>
+    </ng-container>
 </mat-toolbar>
 <router-outlet></router-outlet>

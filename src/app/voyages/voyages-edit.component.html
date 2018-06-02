@@ -1,0 +1,279 @@
+<mat-toolbar fxFlex fxLayout="row" fxLayoutAlign="space-between center">
+    <a mat-icon-button [routerLink]="['../']"><mat-icon>arrow_back</mat-icon></a>
+    <button mat-icon-button (click)="print()"><mat-icon>print</mat-icon></button>
+
+    <button mat-icon-button (click)="draw()" *ngIf="!!voyage?.atd">
+        <mat-icon *ngIf="drawing">star</mat-icon>
+        <mat-icon *ngIf="!drawing">star_border</mat-icon>
+    </button>
+
+    
+    <span fxFlex></span>
+    
+    <div [ngSwitch]="tab">
+        <div *ngSwitchCase="1">
+            <button mat-icon-button (click)="addCrew()">
+                <mat-icon>person_add</mat-icon>
+            </button>
+        </div>
+        <div *ngSwitchCase="2">
+            <button mat-icon-button (click)="addLance()">
+                <mat-icon>add_circle_outline</mat-icon>
+            </button>
+        </div>
+        <div *ngSwitchDefault>
+            <div *ngIf="form.disabled">
+                <button *ngIf="!fresh"
+                        [disabled]="hasLances()"
+                        mat-icon-button 
+                        (click)="del()">
+                    <mat-icon>delete_forever</mat-icon>
+                </button>
+                <button mat-icon-button 
+                        (click)="edit()">
+                    <mat-icon>edit</mat-icon>
+                </button>
+            </div>
+            <div *ngIf="form.enabled">
+                <button mat-icon-button type="submit"
+                        [disabled]="form.pristine && form.valid"
+                        (click)="save()">
+                    <mat-icon>save</mat-icon>
+                </button>
+                <button mat-icon-button 
+                        (click)="drop()">
+                    <mat-icon>highlight_off</mat-icon>
+                </button>
+            </div>
+        </div>
+    </div>
+</mat-toolbar>
+<mat-spinner *ngIf="!ready"></mat-spinner>
+<mat-tab-group dynamicHeight="false" *ngIf="ready" [(selectedIndex)]="tab">
+    <mat-tab label="Programação">
+        <form [formGroup]="form">
+            <div style="padding: 1em"></div>
+
+            <div fxFlex fxLayout="row" fxLayoutAlign="space-around">
+                <mat-form-field floatPlaceholder='always' fxFlex="40%">
+                    <mat-select placeholder="Embarcação" required
+                                formControlName="vessel_id">
+                        <mat-option *ngFor="let v of vessels" [value]="v.vessel_id">
+                        {{ v.vessel_name }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field floatPlaceholder='always' fxFlex="40%">
+                    <mat-select placeholder="Mestre" required  
+                                formControlName="master_id">
+                        <mat-option name="master" *ngFor="let m of masters" [value]="m.person_id">
+                        {{ m.person_name }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+
+            <div fxFlex fxLayout="row" fxLayoutAlign="space-around">
+                <mat-form-field floatPlaceholder='always' fxFlex="40%">
+                    <mat-select placeholder="Tipos de Pescaria" required
+                                (selectionChange)="changeFishType($event.value)" 
+                                formControlName="fishingtype_id">
+                        <mat-option name="fishtypes" *ngFor="let ft of ftypes" [value]="ft.fishingtype_id">
+                        {{ ft.fishingtype_desc }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <mat-form-field floatPlaceholder='always' fxFlex="40%">
+                    <mat-select placeholder="Espécie Alvo" required
+                                formControlName="target_fish_id">
+                        <mat-option name="fishes" *ngFor="let f of fishes" [value]="f.fish_id">
+                        {{ f.fish_name }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+
+            <div fxFlex fxLayout="row" fxLayoutAlign="space-around">
+                <mat-form-field floatPlaceholder='always' fxFlex="40%">
+                    <input placeholder="E.T.D." matInput required
+                           formControlName="etd" type="datetime"
+                           [max]="form.controls['eta'].value"
+                           [owlDateTime]="etd">
+                    <mat-icon matSuffix class="trigger" *ngIf="form.enabled"
+                              [owlDateTimeTrigger]="etd">schedule</mat-icon>
+                    <owl-date-time #etd></owl-date-time>
+                </mat-form-field> 
+
+                <mat-form-field floatPlaceholder='always' fxFlex="40%">
+                    <input placeholder="A.T.D." matInput
+                           formControlName="atd" type="datetime"
+                           [max]="form.controls['ata'].value"
+                           [owlDateTime]="atd">
+                    <mat-icon matSuffix class="trigger" *ngIf="form.enabled"
+                              [owlDateTimeTrigger]="atd">schedule</mat-icon>
+                    <owl-date-time #atd></owl-date-time>
+                </mat-form-field> 
+            </div>
+
+            <div fxFlex fxLayout="row" fxLayoutAlign="space-around">
+                <mat-form-field floatPlaceholder='always' fxFlex="40%">
+                    <input placeholder="E.T.A." matInput
+                           formControlName="eta" type="datetime"
+                           [min]="form.controls['etd'].value"
+                           [owlDateTime]="eta">
+                    <mat-icon matSuffix class="trigger" *ngIf="form.enabled"
+                              [owlDateTimeTrigger]="eta">schedule</mat-icon>
+                    <owl-date-time #eta></owl-date-time>
+                </mat-form-field> 
+
+                <mat-form-field floatPlaceholder='always' fxFlex="40%">
+                    <input placeholder="A.T.A." matInput
+                           formControlName="ata" type="datetime"
+                           [min]="form.controls['atd'].value"
+                           [owlDateTime]="ata">
+                    <mat-icon matSuffix class="trigger" *ngIf="form.enabled"
+                              [owlDateTimeTrigger]="ata">schedule</mat-icon>
+                    <owl-date-time #ata></owl-date-time>
+                </mat-form-field> 
+            </div>
+
+            <div fxFlex fxLayout="row" fxLayoutAlign="space-around">
+                <mat-form-field fxFlex="90%" floatPlaceholder='always'>
+                    <textarea matInput placeholder="Observações"
+                              formControlName="voyage_desc"></textarea>
+                </mat-form-field>
+            </div>
+        </form>
+    </mat-tab>
+
+    <mat-tab label="Pescadores" [disabled]="!voyage.voyage_id">
+        <div *ngFor="let c of voyage.crew; index as i" style="margin-top: 1em;">
+            <div fxFlex fxLayout="row">
+                <mat-form-field floatPlaceholder='always' fxFlex>
+                    <mat-select placeholder="Pescador"
+                                [disabled]="!c.editing"
+                                [(ngModel)]="c.person_id">
+                        <mat-option name="crew" *ngFor="let p of people" [value]="p.person_id">
+                        {{ p.person_name }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <div fxLayout="row" fxLayoutAlign="end" fxFlexOffset="5%">
+                    <ng-container *ngIf="c.editing">
+                        <button mat-icon-button (click)="saveCrew(c)">
+                            <mat-icon>save</mat-icon>
+                        </button>
+                        <button mat-icon-button (click)="dropCrew(c)">
+                            <mat-icon>highlight_off</mat-icon>
+                        </button>
+                    </ng-container>        
+
+                    <ng-container *ngIf="!anyCrew()">
+                        <button mat-icon-button (click)="delCrew(c)">
+                            <mat-icon>delete_forever</mat-icon>
+                        </button>
+                        <button mat-icon-button (click)="editCrew(c)">
+                            <mat-icon>edit</mat-icon>
+                        </button>
+                    </ng-container>
+
+                </div>
+            </div>
+        </div>
+    </mat-tab>
+
+    <mat-tab label="Produção" [disabled]="!voyage.voyage_id">
+        <form [formGroup]="l" *ngFor="let l of lances; index as i">
+            <mat-card class="lance" [ngClass]="{selected: l.enabled}">
+                <div fxFlex fxLayout="row" fxLayoutAlign="end" *ngIf="l.enabled">
+                    <button mat-icon-button 
+                            [disabled]="l.pristine && l.valid"
+                            (click)="saveLance(l,i)">
+                        <mat-icon>save</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="dropLance(l,i)">
+                        <mat-icon>highlight_off</mat-icon>
+                    </button>
+                </div>
+                <div fxFlex fxLayout="row" fxLayoutAlign="end" *ngIf="l.disabled">
+                    <button mat-icon-button (click)="delLance(l,i)">
+                        <mat-icon>delete_forever</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="l.enable()">
+                        <mat-icon>edit</mat-icon>
+                    </button>
+                </div>
+
+                <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
+                    <mat-form-field floatPlaceholder='always' fxFlex="65%">
+                        <mat-select required placeholder="Pescado" 
+                                    formControlName="fish_id">
+                            <mat-option name="fish" *ngFor="let f of fishes" [value]="f.fish_id">
+                            {{ f.fish_name }}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field floatPlaceholder='always' fxFlex="30%">
+                        <input matInput required placeholder="Peso (kg)"
+                               formControlName="weight">
+                    </mat-form-field>
+                </div>
+
+                <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
+                    <mat-form-field floatPlaceholder='always' fxFlex="30%">
+                        <input matInput required placeholder="Lançado em"
+                               formControlName="lance_start" type="datetime"
+                               [max]="l.controls['lance_end'].value"
+                               [owlDateTime]="lance_start">
+                        <mat-icon matSuffix class="trigger" *ngIf="l.enabled"
+                                  [owlDateTimeTrigger]="lance_start">schedule</mat-icon>
+                        <owl-date-time #lance_start></owl-date-time>
+                    </mat-form-field>  
+
+                    <mat-form-field fxFlex floatPlaceholder='always' fxFlex="30%">
+                        <input matInput placeholder="Prof. [m]"
+                               formControlName="depth"> 
+                    </mat-form-field>
+
+                    <mat-form-field floatPlaceholder='always' fxFlex="30%">
+                        <input matInput placeholder="Recolhido em"
+                               formControlName="lance_end" type="datetime"
+                               [min]="l.controls['lance_start'].value"
+                               [owlDateTime]="lance_end">
+                        <mat-icon matSuffix class="trigger"
+                                  [owlDateTimeTrigger]="lance_end">schedule</mat-icon>
+                        <owl-date-time #lance_end></owl-date-time>
+                    </mat-form-field>
+                </div>
+
+                <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
+                    <mat-form-field floatPlaceholder='always' fxFlex="35%">
+                        <mat-select placeholder="Vento" required
+                                    formControlName="wind_id">
+                            <mat-option name="wind" *ngFor="let w of winds" [value]="w.wind_id">
+                            {{ w.wind_desc }}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field floatPlaceholder='always' fxFlex="25%">
+                        <mat-select placeholder="Direção" required
+                                    formControlName="winddir_id">
+                            <mat-option name="winddir" *ngFor="let w of winddirs" [value]="w.winddir_id">
+                            {{ w.winddir_desc }}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field fxFlex floatPlaceholder='always' fxFlex="30%">
+                        <input matInput placeholder="Temp (&deg;C)"
+                               formControlName="temp"> 
+                    </mat-form-field>
+                </div>
+            </mat-card>
+        </form>
+    </mat-tab>
+</mat-tab-group>

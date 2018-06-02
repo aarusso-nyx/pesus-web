@@ -1,0 +1,26 @@
+[matDialogTitle] {
+    border-bottom: 1px solid black;
+}
+
+mat-list-item {
+    border-bottom: 1px solid lightgray;
+}
+
+.mat-dialog-content {
+    max-height: inherit !important;
+    min-height: 35vh;
+}
+
+.popup-link {
+    color: black;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.popup-tstamp {
+    
+}
+
+.popup-pos {
+    
+}

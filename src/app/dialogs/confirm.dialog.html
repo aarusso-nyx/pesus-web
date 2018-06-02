@@ -1,0 +1,8 @@
+<h1 matDialogTitle fxLayout="row" fxLayoutAlign="start center">Confirmar</h1>
+<mat-dialog-content>
+    <p>{{data|json}}</p>
+</mat-dialog-content>
+<mat-dialog-actions fxFlexAlign="end" fxLayout="row" fxLayoutAlign="end" flexLayoutGap="10em">
+    <button mat-button [matDialogClose]="false">Não</button>
+    <button mat-button [matDialogClose]="true">Sim</button>
+</mat-dialog-actions>

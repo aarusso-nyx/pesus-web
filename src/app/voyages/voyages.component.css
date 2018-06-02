@@ -1,0 +1,75 @@
+.voyage-list {
+    margin-top: 1em;
+    
+}
+.voyage {
+    text-decoration: none;
+    color: gray;
+    padding: 15px;
+    border-bottom: 1px solid rgba(0,0,0,.12);
+} 
+
+.voyage.active {
+    color: black;
+} 
+
+.voyage.new {
+    color: black; 
+}
+
+.future {
+    background-color: white;
+}
+
+.closed {
+    background-color: lightgray;
+}
+
+.current {
+    background-color: palegreen;
+}
+
+
+mat-icon.check {
+    display: inline-block;
+}
+
+mat-icon.uncheck {
+    display: none;
+}
+
+
+.active > div > mat-icon.check {
+    display: none;
+}
+
+.active > div > mat-icon.uncheck {
+    display: inline-block;
+}
+
+
+
+mat-expansion-panel-header {
+    background-color: white !important;
+}
+
+.trigger {
+    size: 10px;
+    font-size: 100% !important;
+}
+
+.lance {
+    margin-top: 2em;
+    background-color: #F0F0F0;
+}
+
+.lance.selected {
+    background-color: white;
+    border: 2px solid black;
+    border-radius: 10px;
+}
+
+mat-spinner {
+    margin: auto 20px;
+}
+

@@ -1,1 +1,46 @@
 /* You can add global styles to this file, and also import other style files */
+@import "~ol/ol.css";
+@import "~@angular/material/prebuilt-themes/indigo-pink.css";
+@import "~bootstrap/dist/css/bootstrap.min.css";
+@import "~ng-pick-datetime/assets/style/picker.min.css";
+
+
+mat-drawer-container {
+    min-height: 90vh;
+}
+
+mat-tab-group {
+    padding: 0px 20px;
+}
+
+
+mat-drawer {
+    width: 280px;
+}
+
+mat-list-item {
+    padding: 10px;
+}
+
+
+.active-link {
+/*    color: red;*/
+    background-color: lightgray;
+}
+
+.item.active {
+    background-color: lightgray;
+    font-weight: bold;
+}
+
+.item.disabled {
+    background-color: lightgray;
+    font-weight: bold;
+    color: gray;
+    cursor: not-allowed;
+}
+
+.item {
+    padding: 15px;
+    border-bottom: 1px solid rgba(0,0,0,.12);
+}
