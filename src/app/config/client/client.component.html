@@ -1,16 +1,4 @@
-<mat-toolbar fxFlex fxLayout="row" fxLayoutAlign="space-between center">
-    <button mat-icon-button (click)="print()"><mat-icon>print</mat-icon></button>
-
-    <span fxFlex></span>
-    
-    <div *ngIf="!editing">
-        <button mat-icon-button (click)="edit()"><mat-icon>edit</mat-icon></button>
-    </div>
-    <div *ngIf="editing">
-        <button mat-icon-button (click)="save()"><mat-icon>save</mat-icon></button>
-        <button mat-icon-button (click)="drop()"><mat-icon>highlight_off</mat-icon></button>
-    </div>
-</mat-toolbar>
+<mat-card fxFlex="50%" fxLayout="column" fxFlexLayout="start center">
 <mat-spinner *ngIf="!ready"></mat-spinner>
 
 <mat-tab-group dynamicHeight="false" *ngIf="ready" [(selectedIndex)]="tab">
@@ -18,10 +6,10 @@
         <div style="padding: 1em"></div>
         <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
             <mat-form-field floatPlaceholder='always' fxFlex>
-                <input matInput  [disabled]="!editing" name="client_name" [(ngModel)]="client.client_name" placeholder="Nome">
+                <input matInput disabled name="client_name" [(ngModel)]="client.client_name" placeholder="Nome">
             </mat-form-field>
             <mat-form-field floatPlaceholder='always' fxFlex>
-                <input matInput  [disabled]="!editing" name="cnpj" [(ngModel)]="client.cnpj" placeholder="C.N.P.J.">
+                <input matInput disabled name="cnpj" [(ngModel)]="client.cnpj" placeholder="C.N.P.J.">
             </mat-form-field>
         </div>
     </mat-tab>
@@ -43,20 +31,16 @@
             </div>
         </div>
     </mat-tab>
-
-
     <mat-tab label="Documentos de Armador">
         <div style="padding: 1em"></div>
-        
-        <mat-selection-list #armador>
-            <mat-list-option>RG do Armador</mat-list-option>
-            <mat-list-option>CPF ou CNPJ do Armador</mat-list-option>
-            <mat-list-option>Comprovante de Residência</mat-list-option>
-            <mat-list-option>Comprovante de Pagamento de Taxa</mat-list-option>
-            <mat-list-option>Certificado de Armador (Se AB > 100)</mat-list-option>
-            <mat-list-option>Nada Consta do IBAMA</mat-list-option>
+        <mat-selection-list (selectionChange)="checks($event)">
+            <mat-list-option checkboxPosition="before"
+                             [value]="c"
+                             [selected]="c.value"
+                             *ngFor="let c of client.checks">
+                {{c.check_desc}}
+            </mat-list-option>
         </mat-selection-list>
     </mat-tab>
-
-
 </mat-tab-group>
+</mat-card>

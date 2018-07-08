@@ -1,0 +1,71 @@
+<mat-card fxFlex="50%" fxLayout="column" fxFlexLayout="start center">
+<mat-toolbar fxFlex fxLayout="row" fxLayoutAlign="space-between center">
+    <a mat-icon-button [routerLink]="['../']"><mat-icon>arrow_back</mat-icon></a>
+    <button mat-icon-button (click)="print()"><mat-icon>print</mat-icon></button>
+
+    <span fxFlex></span>
+    
+    <div *ngIf="form.disabled">
+        <button mat-icon-button 
+                (click)="edit()">
+            <mat-icon>edit</mat-icon>
+        </button>
+    </div>
+    <div *ngIf="form.enabled">
+        <button mat-icon-button type="submit"
+                [disabled]="form.pristine && form.valid"
+                (click)="save()">
+            <mat-icon>save</mat-icon>
+        </button>
+        <button mat-icon-button 
+                (click)="drop()">
+            <mat-icon>highlight_off</mat-icon>
+        </button>
+    </div>
+</mat-toolbar>
+<mat-spinner *ngIf="!ready"></mat-spinner>
+<mat-tab-group dynamicHeight="false" *ngIf="ready" [(selectedIndex)]="tab">
+    <mat-tab label="Cliente">
+        <form [formGroup]="form">
+            <div fxFlex fxLayout="row" fxLayoutAlign="space-between" style="margin-top: 1.5em;">
+                <mat-form-field floatPlaceholder='always' fxFlex="55%">
+                    <input matInput formControlName="client_name" placeholder="Nome">
+                </mat-form-field>
+                <mat-form-field floatPlaceholder='always' fxFlex="35%">
+                    <input matInput formControlName="cnpj" placeholder="C.N.P.J.">
+                </mat-form-field>
+            </div>
+        </form>
+    </mat-tab>
+
+    <mat-tab label="Dispositivos ({{client?.devices?.length}})">
+        <div fxLayout="column">
+            <div fxLayout="row" class="item">
+                <strong fxFlex="33%">ESN</strong>
+                <strong fxFlex="66%">Embarcação</strong> 
+            </div>
+            <mat-divider></mat-divider>
+            <a fxLayout="row" class="item nolink"
+                 *ngFor="let d of client.devices"
+                 [routerLink]="'/admin/devices/'+d.vessel_id">
+                <span fxFlex="33%">{{d.esn}}</span>
+                <span fxFlex="66%">{{d.vessel_name}}</span> 
+            </a>
+        </div>
+    </mat-tab>
+
+    <mat-tab label="Acessos ({{client?.users?.length}})">
+        <div fxLayout="column">
+            <a fxLayout="row" class="item nolink"
+                 *ngFor="let u of client.users"
+                 [routerLink]="'/admin/users/'+u.user_id">
+                <img mat-card-avatar src="{{u.picture}}">
+                <div fxFlex fxLayout="column" fxLayoutAlign="start" fxFlexOffset="2em">
+                    <strong>{{u.name}}</strong>
+                    <em>{{u.nickname}}</em>
+                </div>
+            </a>
+        </div>
+    </mat-tab>
+</mat-tab-group>
+</mat-card>

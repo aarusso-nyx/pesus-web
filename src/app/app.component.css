@@ -6,13 +6,11 @@
     color: lightgray
 }
 
-.avatar {
-    height: 48px;
-    width: 48px;
-    border-radius: 100%;
-}
-
 .login { 
     color: white;
     margin: 20px;
+}
+
+.hidden {
+    display: none;
 }

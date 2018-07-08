@@ -1,3 +1,96 @@
+<mat-sidenav-container>
+    <mat-sidenav #menu opened="true" fxLayout="column" fxLayoutAlign="start stretch">
+        <div fxLayout="row" fxLayoutAlign="space-around" class="nyx-tabs" style="padding-top:16px">
+            <div fxFlex fxLayoutAlign="center center" (click)="menu.page=0" [ngClass]="{'active': !menu.page}">
+                <mat-icon>directions_boat</mat-icon>
+            </div>
+            <div fxFlex fxLayoutAlign="center center" (click)="menu.page=1" [ngClass]="{'active': menu.page==1}">
+                <mat-icon>settings</mat-icon>
+            </div>
+            <div fxFlex fxLayoutAlign="center center" (click)="menu.page=2" [ngClass]="{'active': menu.page==2}">
+                <mat-icon>notifications</mat-icon>
+            </div>
+        </div>
+        
+        <div [ngSwitch]="menu.page">
+            <div *ngSwitchCase="1" fxLayout="column">
+                <span class="section">Mostrar:</span>
+                <mat-selection-list (selectionChange)="options($event)">
+                    <mat-list-option checkboxPosition="before" value="names" [selected]="names">Nomes</mat-list-option>
+                    <mat-list-option checkboxPosition="before" value="fleet" [selected]="fleet">Armador</mat-list-option>
+                    <mat-list-option checkboxPosition="before" value="grade" [selected]="grade">Grade</mat-list-option>
+                    <mat-list-option checkboxPosition="before" value="track" [selected]="track">Waypoints</mat-list-option>
+                </mat-selection-list>
 
-<div id="map-map"></div>    
-<div id="popup" class="ol-popup"></div>
+                <span class="section">Camadas de Dados:</span>
+                <mat-selection-list (selectionChange)="layers($event)">
+                    <mat-list-option checkboxPosition="before" value="fleet" selected="true">Frota</mat-list-option>
+                    <mat-list-option checkboxPosition="before" value="areas" selected="true" disabled>Áreas</mat-list-option>
+                    <mat-list-option checkboxPosition="before" value="ports" selected="true" disabled>Portos</mat-list-option>
+                    <mat-list-option checkboxPosition="before" value="baths" selected="true" disabled>Batimetria</mat-list-option>
+                    <mat-list-option checkboxPosition="before" value="plats" selected="true" disabled>Plataformas</mat-list-option>
+                </mat-selection-list>
+
+                <span class="section">Camadas Base:</span>
+                <mat-button-toggle-group  (change)="baseLayers($event)" class="filters">
+                    <mat-button-toggle fxFlex="33%" value="osm" checked="true">Mapa</mat-button-toggle>
+                    <mat-button-toggle fxFlex="33%" value="sat">Sat.</mat-button-toggle>
+                    <mat-button-toggle fxFlex="33%" value="dhn">D.H.N.</mat-button-toggle>
+                </mat-button-toggle-group>        
+
+                <span class="section">Posição em:</span>
+                <mat-button-toggle-group  (change)="coords($event)" class="filters">
+                    <mat-button-toggle fxFlex="33%" value="nil" checked="true">Sem</mat-button-toggle>
+                    <mat-button-toggle fxFlex="33%" value="utm">UTM</mat-button-toggle>
+                    <mat-button-toggle fxFlex="33%" value="dms">DMS</mat-button-toggle>
+                </mat-button-toggle-group>        
+
+                <span class="section">Agrupamento:</span><br/>
+                <mat-slider fxFlex thumbLabel class="filters slider"
+                            step="20" min="0" max="100" 
+                            (change)="radiusChange()"
+                            [(ngModel)]="cRadius"></mat-slider>
+
+                <span class="section">Espaçamento:</span><br/>
+                <mat-slider fxFlex thumbLabel class="filters slider"
+                            step="20" min="20" max="100" 
+                            (change)="tracksChange()"
+                            [(ngModel)]="cTracks"></mat-slider>
+            </div>
+            <div *ngSwitchCase="2">
+                <p class="section">Áreas:</p>
+            </div>
+            <div *ngSwitchDefault>
+                <div fxLayout="row" *nyxAuth="'map:all'" class="filters">
+                    <mat-form-field floatPlaceholder='always' fxFlex>
+                        <mat-select placeholder="Clientes" (selectionChange)="filterClient($event)">
+                            <mat-option>Todos</mat-option>
+                            <mat-option name="clients" *ngFor="let c of clients" [value]="c.client_id">
+                            {{ c.client_name }}
+                            </mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+                
+                <span class="section">Embarcações:</span>
+                <mat-selection-list (selectionChange)="tracks($event)">
+                    <mat-list-option checkboxPosition="before"
+                                     *ngFor="let v of vessels" [value]="v">
+                        {{v.vessel_name}} 
+                        <small class="vessel-client" *nyxAuth="'map:all'">{{v.client.client_name}}</small>
+                    </mat-list-option>
+                    
+                </mat-selection-list>
+            </div>
+        </div>
+    </mat-sidenav>
+    
+    <mat-sidenav-content>
+        <div id="map-map"></div>    
+        <div class="fabs">
+            <button mat-fab (click)="menu.open()"><mat-icon>menu</mat-icon></button>
+            <button mat-fab (click)="reset()"><mat-icon>gps_fixed</mat-icon></button>
+        </div>
+        <div id="popup" class="ol-popup"></div>
+    </mat-sidenav-content>
+</mat-sidenav-container>

@@ -1,11 +1,17 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+
 import { Observable,
+         BehaviorSubject,
          Subject    } from "rxjs";
 
-import { Person, 
+import { filter, tap, 
+         pluck, map } from 'rxjs/operators';
+
+import { Person, Wind, WindDir, Fish, FishingType, 
          Vessel, 
          Client     } from '../app.interfaces';
+
 import { AppService } from '../app.service';
 import { AuthService} from '../auth/auth.service';
 
@@ -14,33 +20,104 @@ import { AuthService} from '../auth/auth.service';
     providedIn: 'root',
 })
 export class ConfigService {
-    
+    private qs: string;
     private client_id: number;
     
     private peopleSource = new Subject<Person[]>();
-    private vesselSource = new Subject<Vessel[]>();
+    private Wind$ = new BehaviorSubject<Wind[]>([]);
+    private WDir$ = new BehaviorSubject<WindDir[]>([]);
+    private Fish$ = new BehaviorSubject<Fish[]>([]);
+    private FTyp$ = new BehaviorSubject<FishingType[]>([]);
 
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     constructor( public http: HttpClient,
+                 private config: ConfigService,
                  private app: AppService,
                  private auth: AuthService ) {
     
-        this.auth.getClient().subscribe((c) => {
-            this.client_id = c.client_id;
+        this.clientId.subscribe((id) => {
+            this.client_id = id;
+            this.qs = id ? `?client_id=${id}` : '';
+                    
+        this.http.get<Wind[]> ( this.app.uri('/models/winds') )
+            .subscribe(data => this.Wind$.next(data));
+
+        this.http.get<WindDir[]> ( this.app.uri('/models/winddir') )
+            .subscribe(data => this.WDir$.next(data));
+
+        this.http.get<Fish[]> ( this.app.uri('/models/fishes') )
+            .subscribe(data => this.Fish$.next(data));
+
+        this.http.get<FishingType[]> ( this.app.uri('/models/fishingtypes') )
+            .subscribe(data => this.FTyp$.next(data));        
         })
     }
 
+    
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
-    getClient() : Observable<Client> {
-        return this.http.get<Client> ( this.app.uri(`/models/clients/${this.client_id}`) );
+    // Client Management
+    get clientId() : Observable<number> {
+        return this.auth.appdata.pipe( pluck('client'), pluck('client_id') );
     }
-
+    
+    get client() : Observable<Client> {
+        return this.http.get<Client> ( this.app.uri(`/clients/${this.client_id}`) );
+    }
+    
+    get clients() : Observable<Client[]> {
+        return this.http.get<Client[]> ( this.app.uri(`/clients`) );
+    }
+    
     putClient(load) : Observable<Client> {
-        return this.http.put<Client> ( this.app.uri(`/models/clients/${this.client_id}`), load );
+        return this.http.put<Client> ( this.app.uri(`/clients/${this.client_id}`), load );
     }    
     
+    ///////////////////////////////////////////////////////////////////
+    setClientCheck(v: number, c: number) : Observable<any> {
+        return this.http.post ( this.app.uri(`/clients/${v}/check/${c}`), {});
+    }
+
+    delClientCheck(v: number, c: number) : Observable<any> {
+        return this.http.delete ( this.app.uri(`/clients/${v}/check/${c}`) );
+    }
+        
+    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
+    get vessels() :  Observable<Vessel[]> {
+        return this.http.get<Vessel[]> ( this.app.uri(`/vessels`+this.qs) );    
+    }
+        
+    getVessel(id) : Observable<any> {
+        return this.http.get ( this.app.uri(`/vessels/${id}`) );
+    }
+
+    putVessel(id,load) : Observable<Vessel> {
+        return this.http.put<Vessel> ( this.app.uri(`/vessels/${id}`), load );
+    }
+
+
+    ///////////////////////////////////////////////////////////////////
+    setVesselPerm(v: number, p: number) : Observable<any> {
+        return this.http.post ( this.app.uri(`/vessels/${v}/perm/${p}`), {});
+    }
+
+    delVesselPerm(v: number, p: number) : Observable<any> {
+        return this.http.delete ( this.app.uri(`/vessels/${v}/perm/${p}`) );
+    }
+
+    ///////////////////////////////////////////////////////////////////
+    setVesselCheck(v: number, c: number) : Observable<any> {
+        return this.http.post ( this.app.uri(`/vessels/${v}/check/${c}`), {});
+    }
+
+    delVesselCheck(v: number, c: number) : Observable<any> {
+        return this.http.delete ( this.app.uri(`/vessels/${v}/check/${c}`) );
+    }
+        
+    
+    ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     getPeople() : Observable<Person[]> {
@@ -48,41 +125,42 @@ export class ConfigService {
     }
     
     refreshPeople() {
-        this.http.get<Person[]> ( this.app.uri(`/models/people?client_id=${this.client_id}`) )
+        this.http.get<Person[]> ( this.app.uri(`/models/people`+this.qs) )
             .subscribe((data) => this.peopleSource.next(data));
-    };
+    }
+    
+    getPerson(id) : Observable<any> {
+        return this.http.get ( this.app.uri(`/models/people/${id}`) );
+    }
+    
+    delPerson(id) : Observable<any> {
+        return this.http.delete ( this.app.uri(`/models/people/${id}`) );
+    }
+    
+    putPerson(id,load) : Observable<any> {
+        return this.http.put ( this.app.uri(`/models/people/${id}`), load );
+    }
+    
+    postPerson(load) : Observable<any> {
+        return this.http.post ( this.app.uri(`/models/people/`), load );
+    }
     
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
-    getVessels() : Observable<Vessel[]> {
-        return this.vesselSource.asObservable();
-    }
-    
-    refreshVessels() {
-        this.http.get<Vessel[]> ( this.app.uri(`/models/vessels?client_id=${this.client_id}`) )
-            .subscribe((data) => this.vesselSource.next(data));
-    };    
-        
     ///////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////
-    getModels(model) : Observable<any> {
-        return this.http.get ( this.app.uri(`/models/${model}/`) );
+    get fishes() :  Observable<Fish[]> {
+        return this.Fish$.asObservable();
     }
-    
-    getModel(model,id) : Observable<any> {
-        return this.http.get ( this.app.uri(`/models/${model}/${id}`) );
+
+    get fishingtypes() :  Observable<FishingType[]> {
+        return this.FTyp$.asObservable();
     }
-    
-    delModel(model,id) : Observable<any> {
-        return this.http.delete ( this.app.uri(`/models/${model}/${id}`) );
+
+    get winds() :  Observable<Wind[]> {
+        return this.Wind$.asObservable();
     }
-    
-    putModel(model,id,load) : Observable<any> {
-        return this.http.put ( this.app.uri(`/models/${model}/${id}`), load );
-    }
-    
-    postModel(model,load) : Observable<any> {
-        return this.http.post ( this.app.uri(`/models/${model}/`), load );
+
+    get winddirs() :  Observable<WindDir[]> {
+        return this.WDir$.asObservable();
     }
 }

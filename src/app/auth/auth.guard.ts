@@ -4,27 +4,27 @@ import { ActivatedRouteSnapshot,
          RouterStateSnapshot,
          Router }           from '@angular/router';
 
+import { Observable,of } from "rxjs";
+import { map, tap } from 'rxjs/operators';
 import { AuthService }      from './auth.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-
-    private client_id: number;
-    private policy: any;
-    
     constructor( private auth: AuthService, 
-                 private router: Router) {
-        auth.getPolicy().subscribe ( p => this.policy = p );
-    }
+                 private router: Router) { }
 
-    canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): boolean {
-        let url: string = state.url;
-
-        const isIn : boolean = this.auth.isAuthenticated();
-        if ( !isIn ) {
-           this.router.navigate(['/login']);
+    canActivate(route: ActivatedRouteSnapshot, 
+                state: RouterStateSnapshot): Observable<boolean> {
+        if ( !this.auth.isAuthenticated() ) {
+            this.router.navigate(['/login']);
+            return of(false);
+        } else {
+            if ( !route.data || !route.data.roles || route.data.roles.length == 0 )
+                return of(true);
+            
+            return this.auth.policy
+                        .pipe(map(p => route.data.roles.some( r => !!p.permissions && p.permissions.includes(r) )), 
+                              tap(p => !!p || this.router.navigate(['/denied']) )             );
         }
-        return isIn;
     }
-
 }

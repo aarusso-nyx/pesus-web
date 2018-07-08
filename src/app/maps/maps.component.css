@@ -17,18 +17,51 @@
     min-width: 280px;
 }
 
+/* ******************************************************* */
+/* ******************************************************* */
 .popup-link {
     display: inline-flex;
+    color: black;
+    font-weight: bold;
+    text-decoration: none;
 }
-
-
 
 
 .popup-pos {
     display: inline-flex;
 }
 
-
 .popup-tstamp {
     display: inline-flex;
+}
+
+
+/* ******************************************************* */
+/* ******************************************************* */
+.fabs {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 10px;
+}
+
+.fabs button {
+    margin: 14px;
+}
+
+
+
+.vessel-client {
+    font-size: 12px !important;
+}
+
+/* ******************************************************* */
+/* ******************************************************* */
+[matDialogTitle] {
+    border-bottom: 1px solid black;
+}
+
+.mat-dialog-content {
+    max-height: inherit !important;
+    min-height: 35vh;
 }

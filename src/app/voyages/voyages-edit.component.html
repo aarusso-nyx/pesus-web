@@ -1,60 +1,66 @@
-<mat-toolbar fxFlex fxLayout="row" fxLayoutAlign="space-between center">
-    <a mat-icon-button [routerLink]="['../']"><mat-icon>arrow_back</mat-icon></a>
-    <button mat-icon-button (click)="print()"><mat-icon>print</mat-icon></button>
+<div fxLayout="column" fxLayoutAlign="start">
 
-    <button mat-icon-button (click)="draw()" *ngIf="!!voyage?.atd">
-        <mat-icon *ngIf="drawing">star</mat-icon>
-        <mat-icon *ngIf="!drawing">star_border</mat-icon>
-    </button>
+<mat-toolbar fxLayout="row" fxLayoutAlign="space-between center">
+    <mat-spinner [diameter]="20" [strokeWidth]="4" *ngIf="!ready"></mat-spinner>
+    
+    <ng-container *ngIf="ready">
+        <button mat-icon-button (click)="app.sidenav_close()" *ngIf="opened"><mat-icon>chevron_left</mat-icon></button>
+        <button mat-icon-button (click)="app.sidenav_open()"  *ngIf="!opened"><mat-icon>chevron_right</mat-icon></button>
+        <a mat-icon-button [routerLink]="['../']"><mat-icon>arrow_upward</mat-icon></a>
+        <button mat-icon-button (click)="print()"><mat-icon>print</mat-icon></button>
 
-    
-    <span fxFlex></span>
-    
-    <div [ngSwitch]="tab">
-        <div *ngSwitchCase="1">
-            <button mat-icon-button (click)="addCrew()">
-                <mat-icon>person_add</mat-icon>
-            </button>
-        </div>
-        <div *ngSwitchCase="2">
-            <button mat-icon-button (click)="addLance()">
-                <mat-icon>add_circle_outline</mat-icon>
-            </button>
-        </div>
-        <div *ngSwitchDefault>
-            <div *ngIf="form.disabled">
-                <button *ngIf="!fresh"
-                        [disabled]="hasLances()"
-                        mat-icon-button 
-                        (click)="del()">
-                    <mat-icon>delete_forever</mat-icon>
-                </button>
-                <button mat-icon-button 
-                        (click)="edit()">
-                    <mat-icon>edit</mat-icon>
+        <span fxFlex></span>
+
+        <div [ngSwitch]="tab">
+            <div *ngSwitchCase="1">
+                <button mat-icon-button (click)="addCrew()" *nyxAuth="'manage:crew'" >
+                    <mat-icon>person_add</mat-icon>
                 </button>
             </div>
-            <div *ngIf="form.enabled">
-                <button mat-icon-button type="submit"
-                        [disabled]="form.pristine && form.valid"
-                        (click)="save()">
-                    <mat-icon>save</mat-icon>
-                </button>
-                <button mat-icon-button 
-                        (click)="drop()">
-                    <mat-icon>highlight_off</mat-icon>
+            <div *ngSwitchCase="2">
+                <button mat-icon-button (click)="addLance()">
+                    <mat-icon>add_circle_outline</mat-icon>
                 </button>
             </div>
+            <div *ngSwitchDefault>
+                <ng-container *nyxAuth="'edit:voyage'">
+                <div *ngIf="form.disabled">
+                    <button *ngIf="!fresh"
+                            [disabled]="hasLances()"
+                            mat-icon-button 
+                            (click)="del()">
+                        <mat-icon>delete_forever</mat-icon>
+                    </button>
+                    <button mat-icon-button 
+                            (click)="edit()">
+                        <mat-icon>edit</mat-icon>
+                    </button>
+                </div>
+                <div *ngIf="form.enabled">
+                    <button mat-icon-button type="submit"
+                            [disabled]="form.pristine && form.valid"
+                            (click)="save()">
+                        <mat-icon>save</mat-icon>
+                    </button>
+                    <button mat-icon-button 
+                            (click)="drop()">
+                        <mat-icon>highlight_off</mat-icon>
+                    </button>
+                </div>
+                </ng-container>
+            </div>
         </div>
-    </div>
+    </ng-container>
 </mat-toolbar>
-<mat-spinner *ngIf="!ready"></mat-spinner>
-<mat-tab-group dynamicHeight="false" *ngIf="ready" [(selectedIndex)]="tab">
+
+    
+<mat-tab-group dynamicHeight="true" *ngIf="ready" [(selectedIndex)]="tab">
     <mat-tab label="Programação">
-        <form [formGroup]="form">
+        <form [formGroup]="form" >
+        <div fxLayout="row wrap">
             <div style="padding: 1em"></div>
 
-            <div fxFlex fxLayout="row" fxLayoutAlign="space-around">
+            <div fxFlex="100%" fxLayout="row" fxLayoutAlign="space-around">
                 <mat-form-field floatPlaceholder='always' fxFlex="40%">
                     <mat-select placeholder="Embarcação" required
                                 formControlName="vessel_id">
@@ -74,7 +80,7 @@
                 </mat-form-field>
             </div>
 
-            <div fxFlex fxLayout="row" fxLayoutAlign="space-around">
+            <div fxFlex="100%" fxLayout="row" fxLayoutAlign="space-around">
                 <mat-form-field floatPlaceholder='always' fxFlex="40%">
                     <mat-select placeholder="Tipos de Pescaria" required
                                 (selectionChange)="changeFishType($event.value)" 
@@ -95,7 +101,7 @@
                 </mat-form-field>
             </div>
 
-            <div fxFlex fxLayout="row" fxLayoutAlign="space-around">
+            <div fxFlex="100%" fxLayout="row" fxLayoutAlign="space-around">
                 <mat-form-field floatPlaceholder='always' fxFlex="40%">
                     <input placeholder="E.T.D." matInput required
                            formControlName="etd" type="datetime"
@@ -117,7 +123,7 @@
                 </mat-form-field> 
             </div>
 
-            <div fxFlex fxLayout="row" fxLayoutAlign="space-around">
+            <div fxFlex="100%" fxLayout="row" fxLayoutAlign="space-around">
                 <mat-form-field floatPlaceholder='always' fxFlex="40%">
                     <input placeholder="E.T.A." matInput
                            formControlName="eta" type="datetime"
@@ -139,12 +145,13 @@
                 </mat-form-field> 
             </div>
 
-            <div fxFlex fxLayout="row" fxLayoutAlign="space-around">
-                <mat-form-field fxFlex="90%" floatPlaceholder='always'>
-                    <textarea matInput placeholder="Observações"
-                              formControlName="voyage_desc"></textarea>
-                </mat-form-field>
-            </div>
+            <div fxFlex="100%" fxLayout="row" fxLayoutAlign="space-around">
+        <mat-form-field fxFlex="90%" floatPlaceholder='always'>
+            <textarea matInput placeholder="Observações"
+                      formControlName="voyage_desc"></textarea>
+        </mat-form-field>
+    </div>
+        </div>
         </form>
     </mat-tab>
 
@@ -277,3 +284,5 @@
         </form>
     </mat-tab>
 </mat-tab-group>
+    
+</div>

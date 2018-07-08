@@ -1,17 +1,21 @@
 <mat-drawer-container>
-    <mat-drawer mode="side" [opened]="true">
-        <a class="new voyage"  fxFlex fxLayoutAlign="start center" [routerLink]="'new'">
-            <mat-icon>add</mat-icon>
-
-            <span fxFlex fxFlexOffset="10">Nova Viagem</span>
+    <mat-drawer mode="side" [opened]="opened" fxLayout="column">
+        <mat-toolbar  fxLayoutAlign="space-between center">
+            <mat-icon (click)="filter=!filter"
+                      matTooltip="Mostrar Filtros" >tune</mat-icon>
             <mat-icon style="color: lightgray">more_vert</mat-icon>
-            <mat-icon (click)="filters=!filters">tune</mat-icon>
-        </a>
+            <span>Viagens</span>
 
-        <div *ngIf="filters" fxFlex fxLayout="column" fxFlexLayout="center center">
+            <a mat-icon-button *nyxAuth="'create:voyage'"
+               matTooltip="Nova Viagem" [routerLink]="'new'">
+                <mat-icon>add</mat-icon>
+            </a>
+        </mat-toolbar>
+
+        <div *ngIf="filter" fxLayout="column" fxFlexLayout="center center" class="filters">
             <mat-form-field floatPlaceholder='always'>
                 <mat-select name="vessel" placeholder="Barco"
-                            (selectionChange)="setFilter()" 
+                            (selectionChange)="setFilter()"
                             [(ngModel)]="vessel_id">
                     <mat-option>Todos</mat-option>
                     <mat-option *ngFor="let v of vessels" [value]="v.vessel_id">
@@ -19,86 +23,50 @@
                     </mat-option>
                 </mat-select>
             </mat-form-field>
-        </div>            
-        <mat-divider></mat-divider>
-
-        <mat-accordion multi="true">
-            <mat-expansion-panel class="future">
-                <mat-expansion-panel-header>
+            
+            <div fxLayout="row" fxLayoutAlign="space-around" class="nyx-tabs">
+                <div fxFlex fxLayoutAlign="center center" 
+                     matTooltip="Todas" 
+                     (click)="setFilter(0)" 
+                     [ngClass]="{'active': !status_id}">
+                    <mat-icon>waves</mat-icon>
+                </div>
+                <div fxFlex fxLayoutAlign="center center" 
+                     matTooltip="Programadas" 
+                     (click)="setFilter(1)" 
+                     [ngClass]="{'active': status_id==1}">
                     <mat-icon>schedule</mat-icon>
-                    <span fxFlexOffset="1em">Programadas</span>
-                </mat-expansion-panel-header>
-                <mat-divider></mat-divider>
-
-                <div fxLayout="column" class="voyage-list">
-                    <a fxFlex matButton class="voyage"
-                       *ngFor="let v of future"
-                       [routerLink]="v.voyage_id" 
-                       routerLinkActive="active">
-                        <div fxLayout="row" fxLayoutAlign="start center">
-                            <mat-icon class="check">radio_button_unchecked</mat-icon>
-                            <mat-icon class="uncheck">radio_button_checked</mat-icon>
-                            <div fxFlex fxLayout="column" fxFlexOffset="2em">
-                                <span class="vessel_name">{{v.vessel.vessel_name}}</span>
-                                <small fxFlex fxLayout="row" fxLayoutAlign="start center">
-                                    <em>ETD: {{v.etd|date:'dd/MMM/yy HH:mm'}}</em>
-                                </small>
-                            </div>
-                        </div>
-                    </a>
                 </div>
-            </mat-expansion-panel>
-
-            <mat-expansion-panel class="current" expanded="true">
-                <mat-expansion-panel-header>
+                <div fxFlex fxLayoutAlign="center center" 
+                     matTooltip="Correntes" 
+                     (click)="setFilter(2)" 
+                     [ngClass]="{'active': status_id==2}">
                     <mat-icon>update</mat-icon>
-                    <span fxFlexOffset="1em">Em Andamento</span>
-                </mat-expansion-panel-header>
-                <mat-divider></mat-divider>
-                <div fxLayout="column" class="voyage-list">
-                    <a fxFlex matButton class="voyage"
-                       *ngFor="let v of current"
-                       [routerLink]="v.voyage_id" 
-                       routerLinkActive="active">
-                        <div fxLayout="row" fxLayoutAlign="start center">
-                            <mat-icon class="check">radio_button_unchecked</mat-icon>
-                            <mat-icon class="uncheck">radio_button_checked</mat-icon>
-                            <div fxFlex fxLayout="column" fxFlexOffset="2em">
-                                <span class="vessel_name">{{v.vessel.vessel_name}}</span>
-                                <small fxFlex fxLayout="row" fxLayoutAlign="start center">
-                                    <span>ATD: {{v.atd|date:'dd/MMM/yy HH:mm'}}</span>
-                                </small>
-                            </div>
-                        </div>
-                    </a>
                 </div>
-            </mat-expansion-panel>
-
-            <mat-expansion-panel class="closed">
-                <mat-expansion-panel-header>
-                    <mat-icon>check</mat-icon>
-                    <span fxFlexOffset="1em">Encerradas</span>
-                </mat-expansion-panel-header>
-                <mat-divider></mat-divider>
-                <div fxLayout="column" class="voyage-list">
-                    <a fxFlex matButton class="voyage"
-                       *ngFor="let v of closed"
-                       [routerLink]="v.voyage_id" 
-                       routerLinkActive="active">
-                        <div fxLayout="row" fxLayoutAlign="start center">
-                            <mat-icon class="check">radio_button_unchecked</mat-icon>
-                            <mat-icon class="uncheck">radio_button_checked</mat-icon>
-                            <div fxFlex fxLayout="column" fxFlexOffset="2em">
-                                <span class="vessel_name">{{v.vessel.vessel_name}}</span>
-                                <small fxFlex fxLayout="row" fxLayoutAlign="end center">
-                                    <span>ATA: {{v.ata|date:'dd/MMM/yy HH:mm'}}</span>
-                                </small>
-                            </div>
-                        </div>
-                    </a>
+                <div fxFlex fxLayoutAlign="center center" 
+                     matTooltip="Finalizadas" 
+                     (click)="setFilter(3)" 
+                     [ngClass]="{'active': status_id==3}">
+                    <mat-icon>done</mat-icon>
                 </div>
-            </mat-expansion-panel>
-        </mat-accordion>
+            </div>
+        </div>            
+    
+        <mat-nav-list fxLayout="column">
+            <a fxLayout="column"
+               matButton class="item"  
+               routerLinkActive="active"
+               [routerLink]="v.voyage_id" 
+               *ngFor="let v of voyages">
+                <span>{{v.vessel.vessel_name}}</span>
+                <small [ngSwitch]="v.status_id">
+                    <em *ngSwitchCase="1">ETD: {{v.etd|date:'dd/MMM/yy HH:mm'}} ({{v.etd|amTimeAgo}})</em>
+                    <strong *ngSwitchCase="2">ATD: {{v.atd|date:'dd/MMM/yy HH:mm'}} ({{v.atd|amTimeAgo}})</strong>
+                    <span *ngSwitchCase="3">ATA: {{v.ata|date:'dd/MMM/yy HH:mm'}} ({{v.ata|amTimeAgo}})</span>
+                    <span *ngShitchDefault>assert(voyage.status_id)</span>
+                </small>
+            </a>
+        </mat-nav-list>
     </mat-drawer>
     <mat-drawer-content>
         <router-outlet></router-outlet>

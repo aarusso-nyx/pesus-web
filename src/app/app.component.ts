@@ -1,7 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { BreakpointObserver, Breakpoints, BreakpointState } from '@angular/cdk/layout';
 import { Observable } from 'rxjs';
-
+import { filter, pairwise, pluck } from 'rxjs/operators';
+import { ActivatedRoute, 
+         NavigationEnd,
+         RoutesRecognized,
+         Router }        from '@angular/router';
 import { AppService    } from './app.service';
 import { AuthService   } from './auth/auth.service';
 
@@ -14,22 +18,46 @@ import { AuthService   } from './auth/auth.service';
 })
 export class AppComponent {
     title: string;
+    logged: boolean;
     profile: any;
-
-    
-    isHandset: Observable<BreakpointState> = this.breakpointObserver.observe(Breakpoints.Handset);
+    handset: boolean;
+        
     constructor(private breakpointObserver: BreakpointObserver,
-                public  auth: AuthService,
-                private app:   AppService ) {
+                private router: Router,
+                private route:  ActivatedRoute,
+                public  auth:   AuthService,
+                private app:    AppService ) {
         auth.handleAuthentication();
         auth.scheduleRenewal();
     }
 
-    ngOnInit() {   
-        this.auth.getProfile()
-            .subscribe( p => this.profile = p);
+    ngOnInit() {
+        // push every route change in localstorage
+        this.router.events
+            .pipe(filter((e: any) => e instanceof RoutesRecognized), pairwise() )
+            .subscribe((e: any) => { // previous url
+                this.app.last = e[0].urlAfterRedirects;
+            });
+        
+        // Make sure sidenav is open
+        this.router.events
+            .pipe(filter((e: any) => e instanceof NavigationEnd), pairwise() )
+            .subscribe((e: any) => { // previous url
+                this.app.sidenav_open();
+            });
+                
+        this.breakpointObserver
+            .observe(Breakpoints.Handset)
+            .subscribe(p => this.handset = p.matches);
 
         this.app.title$
-            .subscribe( data => this.title = data );
+            .subscribe(t => this.title = t);
+
+        this.auth.profile
+            .subscribe(p => this.profile = p);
+        
+        this.auth.logoff
+            .subscribe(l => this.logged = l);
+            
     }
 }

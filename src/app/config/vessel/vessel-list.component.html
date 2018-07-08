@@ -1,11 +1,9 @@
 <mat-drawer-container>
-    <mat-drawer mode="side" [opened]="!opened">
+    <mat-drawer fxLayout="column"  mode="side" [opened]="opened">
+        <mat-toolbar fxLayoutAlign="start center">
+            <span>Frota</span>
+        </mat-toolbar>
         <mat-nav-list fxLayout="column">
-            <a class="item"  fxFlex fxLayoutAlign="start center" [routerLink]="'new'">
-                <mat-icon>add</mat-icon>
-                <span>Nova Embarcação</span>
-            </a>
-            <mat-divider></mat-divider>
             <a fxFlex class="item" 
                matButton 
                routerLinkActive="active"

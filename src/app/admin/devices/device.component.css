@@ -1,0 +1,12 @@
+mat-card {
+    margin: 2em auto;
+}
+
+mat-toolbar {
+    margin-bottom: 2em;
+}
+
+.formdata {  
+    padding-top: 2.5em;
+    border-top: 1px solid lightgray;
+}

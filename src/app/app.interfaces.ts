@@ -74,6 +74,7 @@ export interface Voyage {
     ata?:                Date;
     atd?:                Date;
     vessel_id?:          number;
+    status_id?:          number;
     fishingtype_id?:     number;
     target_fish_id?:     number;
     master_id?:          number;    

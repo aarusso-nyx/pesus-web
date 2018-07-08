@@ -1,11 +1,13 @@
 <mat-drawer-container>
-    <mat-drawer mode="side" [opened]="!opened">
-        <mat-nav-list fxLayout="column">
-            <a class="item"  fxFlex fxLayoutAlign="start center" [routerLink]="'new'">
-                <mat-icon>add</mat-icon>
-                <span>Novo Tripulante</span>
+    <mat-drawer fxLayout="column" mode="side" [opened]="opened">
+        <mat-toolbar fxLayoutAlign="space-between center">
+            <span>Pescadores</span>
+
+            <a mat-icon-button [routerLink]="'new'" *nyxAuth="'create:crew'">
+                <mat-icon>person_add</mat-icon>
             </a>
-            <mat-divider></mat-divider>
+        </mat-toolbar>
+        <mat-nav-list fxLayout="column">
             <a fxFlex class="item" 
                matButton 
                routerLinkActive="active"

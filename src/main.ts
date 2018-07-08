@@ -4,6 +4,8 @@ import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { AppModule } from './app/app.module';
 import { environment } from './environments/environment';
 
+import * as moment from 'moment';
+import 'moment/locale/pt-br';
 import 'hammerjs';
 
 if (environment.production) {
@@ -13,3 +15,5 @@ if (environment.production) {
 platformBrowserDynamic().bootstrapModule(AppModule, {
     providers: [{provide: LOCALE_ID, useValue: 'pt' }]
 }).catch(err => console.log(err));
+
+moment.locale('pt-br');

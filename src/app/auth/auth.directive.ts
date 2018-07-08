@@ -9,9 +9,9 @@ export class AuthDirective {
         private templateRef: TemplateRef<any>,
         private viewContainer: ViewContainerRef ) { }
 
-    @Input() set nyxAuth( scope: string ) {        
-        this.auth.getPolicy().subscribe(policies => {
-            policies && policies.permissions.includes(scope) ?
+    @Input() set nyxAuth( scope: string ) {
+        this.auth.policy.subscribe(p => {
+            p && p.permissions.includes(scope) ?
                 this.viewContainer.createEmbeddedView(this.templateRef) :
                 this.viewContainer.clear();
         });

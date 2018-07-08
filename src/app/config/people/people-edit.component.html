@@ -1,38 +1,48 @@
-<mat-toolbar fxFlex fxLayout="row" fxLayoutAlign="space-between center">
-    <a mat-icon-button [routerLink]="['../']"><mat-icon>arrow_back</mat-icon></a>
-    <button mat-icon-button (click)="print()"><mat-icon>print</mat-icon></button>
+<div fxLayout="column" fxLayoutAlign="start">
 
-    <span fxFlex></span>
+<mat-toolbar fxLayout="row" fxLayoutAlign="space-between center">
+    <mat-spinner [diameter]="20" [strokeWidth]="4" *ngIf="!ready"></mat-spinner>
     
-    <div *ngIf="form.disabled">
-        <button *ngIf="!fresh" 
-                mat-icon-button 
-                (click)="del()">
-            <mat-icon>delete_forever</mat-icon>
-        </button>
-        <button mat-icon-button 
-                (click)="form.enable()">
-            <mat-icon>edit</mat-icon>
-        </button>
-    </div>
-    <div *ngIf="form.enabled">
-        <button mat-icon-button 
-                [disabled]="form.pristine && form.valid"
-                (click)="save()">
-            <mat-icon>save</mat-icon>
-        </button>
-        <button mat-icon-button 
-                (click)="drop()">
-            <mat-icon>highlight_off</mat-icon>
-        </button>
-    </div>
+    <ng-container *ngIf="ready">
+        <button mat-icon-button (click)="app.sidenav_close()" *ngIf="opened"><mat-icon>chevron_left</mat-icon></button>
+        <button mat-icon-button (click)="app.sidenav_open()"  *ngIf="!opened"><mat-icon>chevron_right</mat-icon></button>
+        <a mat-icon-button [routerLink]="['../']"><mat-icon>arrow_upward</mat-icon></a>
+        <button mat-icon-button (click)="print()"><mat-icon>print</mat-icon></button>
+
+        <span fxFlex></span>
+
+        <div *ngIf="form.disabled">
+            <ng-container *nyxAuth="'delete:crew'">
+            <button *ngIf="!fresh"
+                    mat-icon-button 
+                    (click)="del()">
+                <mat-icon>delete_forever</mat-icon>
+            </button>
+            </ng-container>
+            <ng-container *nyxAuth="'edit:crew'">
+            <button mat-icon-button 
+                    (click)="form.enable()">
+                <mat-icon>edit</mat-icon>
+            </button>
+            </ng-container>
+        </div>
+        <div *ngIf="form.enabled">
+            <button mat-icon-button 
+                    [disabled]="form.pristine && form.valid"
+                    (click)="save()">
+                <mat-icon>save</mat-icon>
+            </button>
+            <button mat-icon-button 
+                    (click)="drop()">
+                <mat-icon>highlight_off</mat-icon>
+            </button>
+        </div>
+    </ng-container>
 </mat-toolbar>
-<mat-spinner *ngIf="!ready"></mat-spinner>
 
 <form [formGroup]="form">
 <mat-tab-group dynamicHeight="false" *ngIf="ready" [(selectedIndex)]="tab">
     <mat-tab label="Identidade">
-        
         <div style="padding: 1em"></div>
         <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
             <mat-form-field floatPlaceholder='always' fxFlex="70%">
@@ -143,3 +153,4 @@
     </mat-tab>
 </mat-tab-group>
 </form>
+</div>

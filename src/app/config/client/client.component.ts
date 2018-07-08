@@ -11,12 +11,8 @@ import { Client        }     from '../../app.interfaces';
     styleUrls: ['./client.component.css']
 })
 export class ClientComponent implements OnInit {
-    id:     number;
     client: Client;
-    origin: Client;
     profile: any;
-    
-    editing: boolean = false;
     ready:   boolean = false;
     
     ///////////////////////////////////////////////////////////////////
@@ -24,47 +20,35 @@ export class ClientComponent implements OnInit {
     ///////////////////////////////////////////////////////////////////
     constructor(private app:    AppService,
                 private auth:   AuthService,
-                private route:  ActivatedRoute,
-                private router: Router,
-                private config: ConfigService ) { 
-    
-        this.app.setTitle('Empresa');
-    }
+                private config: ConfigService ) { }
 
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     ngOnInit() {
-        this.auth.getProfile()
-            .subscribe( p => this.profile = p);
+        this.app.title = 'Empresa';
         
-        this.config.getClient()
+        this.auth.profile
+            .subscribe(p => this.profile = p);
+        
+        this.config.client
             .subscribe ( (data) => { 
                 this.client = data; 
-                this.origin = data;
                 this.ready = true;
             });
     }
-    
-    ///////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////
-    edit() {
-        this.editing = true;
-    }    
 
-    drop() {
-        this.client = this.origin;
-        this.editing = false;
-    }
-
-    save() {
-        this.config.putClient(this.client)
-            .subscribe((data) => { 
-                this.client = data; 
-                this.origin = data;
-                this.editing = false;
-            });
+    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
+    checks(evt) {
+        const v = evt.option.value;
+        if ( evt.option.selected ) {
+            this.config.setClientCheck(v.client_id, v.check_id)
+                .subscribe();
+        } else {
+            this.config.delClientCheck(v.client_id, v.check_id)
+                .subscribe();
+        }
     }
     
     print() {

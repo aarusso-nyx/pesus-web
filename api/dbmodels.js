@@ -19,6 +19,7 @@ q.plain_models = {
     geometries:      { tableName: sn+'geometries',      idAttribute: 'geometry_id' },
     lances:          { tableName: sn+'lances',          idAttribute: 'lance_id' },
     masters:         { tableName: sn+'masters',         idAttribute: 'person_id' },
+    plans:           { tableName: sn+'plans',           idAttribute: 'plan_id' },
     people:          { tableName: sn+'people',          idAttribute: 'person_id' },
     severities:      { tableName: sn+'severities',      idAttribute: 'severity_id',    orderAttribute: 'severity_order'},
     vessels:         { tableName: sn+'vessels',         idAttribute: 'vessel_id' },
@@ -31,25 +32,38 @@ q.plain_models = {
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 // Views 
-q.Seascape = db.Model.extend({tableName: sn+'seascape'});
-q.Path = db.Model.extend({tableName: sn+'paths'});
-q.Crew  = db.Model.extend({tableName: sn+'crew', idAttribute: 'person_id' });
-
-q.Address= db.Model.extend({tableName: sn+'addresses',     idAttribute: 'address_id' });
-q.FType  = db.Model.extend({tableName: sn+'fishingtypes',  idAttribute: 'fishingtype_id' });
-q.Vessel = db.Model.extend({tableName: sn+'vessels', idAttribute: 'vessel_id' });
-
-q.People = db.Model.extend({tableName: sn+'people', idAttribute: 'person_id',
-    address: function() { return this.belongsTo(q.Address,     'address_id')}, 
-});
-
-
-q.Sub = db.Model.extend({tableName: sn+'sub_clients',idAttribute: 'sub',
+q.Seascape = db.Model.extend({tableName: sn+'seascape',
     client: function() { return this.belongsTo(q.Client, 'client_id')}, 
 });
 
+
+q.Path   = db.Model.extend({tableName: sn+'paths'});
+q.Crew   = db.Model.extend({tableName: sn+'crew', idAttribute: 'person_id' });
+q.Staff  = db.Model.extend({tableName: sn+'client_people', idAttribute: 'person_id' });
+q.Address= db.Model.extend({tableName: sn+'addresses',     idAttribute: 'address_id' });
+
+q.FType  = db.Model.extend({tableName: sn+'fishingtypes', idAttribute: 'fishingtype_id' });
+q.VPerm  = db.Model.extend({tableName: sn+'vessel_perms'  });
+
+q.Check  = db.Model.extend({tableName: sn+'checks', idAttribute: 'check_id' });
+q.VChck  = db.Model.extend({tableName: sn+'vessel_checks' });
+q.CChck  = db.Model.extend({tableName: sn+'client_checks' });
+
+q.Vessel = db.Model.extend({tableName: sn+'vessels', idAttribute: 'vessel_id',
+  checks: function() { return this.hasMany(q.VChck,  'vessel_id')},
+   perms: function() { return this.hasMany(q.VPerm,  'vessel_id')},
+  client: function() { return this.belongsTo(q.Client, 'client_id')}, 
+});
+
+q.People = db.Model.extend({tableName: sn+'people', idAttribute: 'person_id',
+ address: function() { return this.belongsTo(q.Address,     'address_id')}, 
+});
+
 q.Client = db.Model.extend({tableName: sn+'clients',idAttribute: 'client_id',
-    address: function() { return this.belongsTo(q.Address,     'address_id')}, 
+ address: function() { return this.belongsTo(q.Address,'address_id')}, 
+  checks: function() { return this.hasMany(q.CChck,  'client_id')},
+ devices: function() { return this.hasMany(q.Vessel, 'client_id')},
+   staff: function() { return this.hasMany(q.People, 'voyage_id').through(q.Staff,'person_id', 'zz')},                
 });
 
 q.Fish  = db.Model.extend({tableName: sn+'fishes',  idAttribute: 'fish_id'   });
@@ -88,11 +102,6 @@ q.AStatus  = db.Model.extend({tableName: sn+'status_alarms'});
 q.VStatus  = db.Model.extend({tableName: sn+'status_vessels'});
 
 q.ALog  = db.Model.extend ({ tableName: sn+'alerts_log', idAttribute: 'alarm_id'});
-
-q.Fleet = db.Model.extend ({ tableName: sn+'fleet', idAttribute: 'vessel_id', 
-         alarms: function() { return this.hasMany(q.Alarm, 'vessel_id') },
-         status: function() { return this.hasOne(q.VStatus, 'vessel_id') },
-})
 
 q.Alarm = db.Model.extend ({ tableName: sn+'alarms', idAttribute: 'alarm_id', 
      conditions: function() { return this.hasMany(q.Condition,  'alarm_id'      )},

@@ -17,8 +17,8 @@ export class LatLonPipe implements PipeTransform {
     }    
         
     transform(p: number[]): string {
-        const lon = this.format_coord(Math.abs(p[0])) + (p[0] >= 0.0 ? ' N' : ' S');
-        const lat = this.format_coord(Math.abs(p[1])) + (p[1] >= 0.0 ? ' E' : ' W');
+        const lon = this.format_coord(Math.abs(p[1])) + (p[1] >= 0.0 ? ' N' : ' S');
+        const lat = this.format_coord(Math.abs(p[0])) + (p[0] >= 0.0 ? ' E' : ' W');
         return lat + '   ' + lon;
     }
 

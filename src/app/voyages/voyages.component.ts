@@ -35,13 +35,9 @@ import _omit   from "lodash-es/omit";
 })
 export class VoyageListComponent implements OnInit {
     opened:  boolean = true;
-    filters: boolean;
+    filter:  boolean = false;
     voyages: Voyage[];
-    selects: Voyage[];
-    
-    future:  Voyage[];
-    current: Voyage[];
-    closed:  Voyage[];
+    voyage_: Voyage[];
     
     vessels: Vessel[];
     vessel_id: number;
@@ -49,68 +45,57 @@ export class VoyageListComponent implements OnInit {
     
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
-    constructor( private app:    AppService,
+    constructor( private route:  ActivatedRoute,
+                 private app:    AppService,
                  private config: ConfigService, 
-                 private voy:    VoyageService) {         
-        this.app.setTitle('Viagens');      
-        
-        this.voy.getVoyages()
-            .subscribe ( (data) => {
-                this.voyages = data;
-                this.setFilter();
-            
-                this.closed  = this.voyages.filter ( i => (!!i.atd && !!i.ata) );
-                this.current = this.voyages.filter ( i => (!!i.atd &&  !i.ata) );
-                this.future  = this.voyages.filter ( i => ( !i.atd &&  !i.ata) );
-            
-        });
-        
-        this.config.getVessels()
-            .subscribe ( (data) => this.vessels = data );
-    }    
+                 private voy:    VoyageService) { }    
 
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     ngOnInit() {
+        this.app.title = 'Viagens';      
+
+        this.route.params
+            .subscribe( (addr) => this.app.sidenav_open() );
+
+        this.app.sidenav_status
+            .subscribe(v => this.opened = v);
+        
+        this.voy.getVoyages()
+            .subscribe ( (data) => {
+                this.voyage_ = data.map(v => {
+                    v.status_id = !!v.atd ? (!!v.ata ? 3 : 2) : 1;
+                    return v;
+                });
+                this.setFilter(null);
+        });
+            
         this.voy.refreshVoyages();
-        this.config.refreshVessels();
+        
+        this.config.vessels
+            .subscribe ( (data) => this.vessels = data );
     }
     
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
-    setFilter() {
-        this.selects = this.voyages.filter((v) => {
-            return this.vessel_id ? (this.vessel_id == v.vessel_id) : true;
-        }).filter((v) => {
-            switch(this.status_id) {
-                case 0:
-                    return true;
-                    
-                case 1:
-                    return !!v.atd && !v.ata;
-                    
-                case 2:
-                    return !v.atd;
-                    
-                case 3:
-                    return !!v.atd && !!v.ata;
-            }
-        });  
+    setFilter(status) {
+        if (status != undefined) {
+            this.status_id = status;
+        }
         
-        
-        
-        this.selects = _sortBy ( this.selects, ['ata', 'atd']).reverse();
+        this.voyages = _sortBy (this.voyage_
+                        .filter(v => this.vessel_id ? (this.vessel_id == v.vessel_id) : true)
+                        .filter(v => this.status_id ? (this.status_id == v.status_id) : true),
+                        ['ata', 'atd']).reverse();     
     }
     
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     getStyle( v: Voyage ) : string {
-        if ( !v.atd ) {
-            return 'item programmed';
-        } else if ( !!v.atd && !!v.ata ) {
-            return 'item completed';
-        } else if ( !!v.atd && !v.ata ) {
-            return 'item current';
+        switch (v.status_id) {
+            case 1: return 'item completed';
+            case 2: return 'item current';
+            case 3: return 'item programmed';
         }
     }
 }
@@ -138,6 +123,8 @@ export class VoyageEditComponent implements OnInit {
     tab:      number  = 0;
     fresh:    boolean = true;
     ready:    boolean = false;
+    opened:   boolean;
+
     drawing:  boolean;
     
     form:     FormGroup;
@@ -146,28 +133,34 @@ export class VoyageEditComponent implements OnInit {
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
-    constructor( public  dialog: MatDialog,
+    constructor( private dialog: MatDialog,
                  private fb:     FormBuilder,
                  private route:  ActivatedRoute,
                  private router: Router,
                  private app:    AppService,
-                 private auth:   AuthService,
                  private config: ConfigService, 
-                 private voy:    VoyageService ) { 
-        
-        this.config.getModels('fishes')
+                 private voy:    VoyageService ) { }
+    
+    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
+    ngOnInit() {
+        this.app.sidenav_status
+            .subscribe (x => this.opened = x);
+
+        this.config.fishes
             .subscribe ( (data) => this.allfish = data );
         
-        this.config.getModels('fishingtypes')
+        this.config.fishingtypes
             .subscribe ( (data) => this.ftypes = data );
 
-        this.config.getModels('winds')
+        this.config.winds
             .subscribe ( (data) => this.winds = data );
         
-        this.config.getModels('winddir')
+        this.config.winddirs
             .subscribe ( (data) => this.winddirs = data );
 
-        this.config.getVessels()
+        this.config.vessels
             .subscribe ( (data) => this.vessels = data );
         
         this.config.getPeople()
@@ -176,12 +169,11 @@ export class VoyageEditComponent implements OnInit {
                 this.masters = this.people.filter(i => !!i.master);
             });
         
-        this.config.refreshVessels();
         this.config.refreshPeople();
         
-        this.auth.getClient()
-            .subscribe((data) => {
-                this.id = data.client_id;
+        this.config.clientId
+            .subscribe((id) => {
+                this.id = id;
             
                 // Create Form Group
                 this.form = this.fb.group({
@@ -198,12 +190,7 @@ export class VoyageEditComponent implements OnInit {
                     target_fish_id: ['', Validators.required],
                 });
             });
-    }
-    
-    ///////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////
-    ngOnInit() {
+        
         this.route.params.subscribe( addr => {
             let obs: Observable<Voyage>;
             
@@ -213,6 +200,7 @@ export class VoyageEditComponent implements OnInit {
                 obs = this.voy.getVoyage(addr.voyage_id);
             }
             
+            this.ready = false;
             obs.subscribe( (data) => {
                 this.ready  = true;
                 this.voyage = data;
@@ -240,24 +228,8 @@ export class VoyageEditComponent implements OnInit {
                 this.lances.forEach( l => l.disable() );
                 
                 this.changeFishType(this.voyage.fishingtype_id);
-                this.app.getTracks()
-                    .subscribe ( (data) => {
-                        this.drawing = data.includes(this.voyage.voyage_id);
-                    });
             });
         });
-    }
-    
-    ///////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////
-    draw () {
-        this.drawing = !this.drawing;
-        if ( this.drawing ) {
-            this.app.addTrack(this.voyage.voyage_id);
-        } else {
-            this.app.delTrack(this.voyage.voyage_id);
-        }
     }
     
     ///////////////////////////////////////////////////////////////////
@@ -269,7 +241,7 @@ export class VoyageEditComponent implements OnInit {
     }
         
     hasLances() : boolean {
-        return (this.voyage.lances.length > 0);
+        return (this.voyage.lances && this.voyage.lances.length > 0);
     }
     
     ///////////////////////////////////////////////////////////////////

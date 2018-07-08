@@ -165,3 +165,48 @@ $BODY$
 
 CREATE TRIGGER "checkATD" BEFORE INSERT OR UPDATE OF "atd" ON "pesca"."voyages" 
 FOR EACH ROW EXECUTE PROCEDURE "pesca"."checkATD"();
+
+
+
+
+CREATE OR REPLACE FUNCTION "pesca"."interpol"() RETURNS "trigger" 
+	AS $BODY$
+DECLARE
+	dt	INTEGER;
+	dd  float8;
+	dx  float8;
+	dy  float8;
+	vel	float8;
+	dir float8;
+BEGIN
+	IF NEW.dir IS NOT NULL OR NEW.vel IS NOT NULL THEN
+		RETURN NULL;
+	END IF;
+
+
+	SELECT INTO dt, dx, dy, dir, dd
+		(NEW.tstamp-tstamp),
+		(NEW.lon-lon),
+		(NEW.lat-lat),
+		ST_Azimuth ( ST_SetSRID(ST_Point(lon, lat), 4326), ST_SetSRID(ST_Point(NEW.lon, NEW.lat), 4326)),
+		ST_Distance( ST_SetSRID(ST_Point(lon, lat), 4326), ST_SetSRID(ST_Point(NEW.lon, NEW.lat), 4326))
+	FROM pesca.positions
+	WHERE esn=NEW.esn 
+	ORDER BY tstamp DESC 
+	LIMIT 1;
+
+	NEW.vel = sqrt(dx*dx+dy*dy) * (40075.16/360.0) * (3600/dt);
+	NEW.dir = dir;
+
+	RETURN NEW;
+END;
+$BODY$
+	LANGUAGE plpgsql
+	COST 100
+	CALLED ON NULL INPUT
+	SECURITY INVOKER
+	VOLATILE;
+
+-- CREATE TRIGGER "interpol" BEFORE INSERT OR UPDATE OF "lat","lon" ON "pesca"."positions" 
+-- FOR EACH ROW EXECUTE PROCEDURE "pesca"."interpol"();
+

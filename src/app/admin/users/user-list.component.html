@@ -1,0 +1,42 @@
+<table mat-table matSort [dataSource]="users">
+    <ng-container matColumnDef="picture">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let element"> 
+            <img #img src="{{element.picture}}" class="avatar" alt="avatar"
+                 (error)="img.src='/assets/insit_favicon-180x180.png'">
+        </td>
+    </ng-container>
+
+    <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
+        <td mat-cell *matCellDef="let element"> 
+            {{element.email}}
+            <mat-icon *ngIf="element.email_verified" style="font-size: 16px !important">verified_user</mat-icon>
+        </td>
+    </ng-container>
+    <ng-container matColumnDef="username">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Nome</th>
+        <td mat-cell *matCellDef="let element"> 
+            <a [routerLink]="element.user_id"> {{element.name}} ({{element.nickname}})</a>
+        </td>
+    </ng-container>
+    <ng-container matColumnDef="login_counts">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Logins</th>
+        <td mat-cell *matCellDef="let element"> 
+            {{element.logins_count}}
+        </td>
+    </ng-container>
+    <ng-container matColumnDef="last_login">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Último Login</th>
+        <td mat-cell *matCellDef="let element"> 
+            {{element.last_login|amTimeAgo}}
+        </td>
+    </ng-container>
+    <ng-container matColumnDef="client">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Cliente</th>
+      <td mat-cell *matCellDef="let element"> {{element.app_metadata?.client?.client_name}} </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="cols"></tr>
+    <tr mat-row *matRowDef="let row; columns: cols;"></tr>
+</table>

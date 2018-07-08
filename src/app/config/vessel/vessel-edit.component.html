@@ -1,103 +1,117 @@
-<mat-toolbar fxFlex fxLayout="row" fxLayoutAlign="space-between center">
-    <a mat-icon-button [routerLink]="['../']"><mat-icon>arrow_back</mat-icon></a>
-    <button mat-icon-button (click)="print()"><mat-icon>print</mat-icon></button>
-    <span fxFlex></span>
+<div fxLayout="column" fxLayoutAlign="start">
+<mat-toolbar fxLayout="row" fxLayoutAlign="space-between center">
+    <mat-spinner [diameter]="20" [strokeWidth]="4" *ngIf="!ready"></mat-spinner>
     
-    <div *ngIf="form.disabled">
-        <button *ngIf="!fresh" 
-                mat-icon-button 
-                (click)="del()">
-            <mat-icon>delete_forever</mat-icon>
-        </button>
-        <button mat-icon-button 
-                (click)="form.enable()">
-            <mat-icon>edit</mat-icon>
-        </button>
-    </div>
-    <div *ngIf="form.enabled">
-        <button mat-icon-button 
-                [disabled]="form.pristine && form.valid"
-                (click)="save()">
-            <mat-icon>save</mat-icon>
-        </button>
-        <button mat-icon-button 
-                (click)="drop()">
-            <mat-icon>highlight_off</mat-icon>
-        </button>
-    </div>
+    <ng-container *ngIf="ready">
+        <button mat-icon-button (click)="app.sidenav_close()" *ngIf="opened"><mat-icon>chevron_left</mat-icon></button>
+        <button mat-icon-button (click)="app.sidenav_open()"  *ngIf="!opened"><mat-icon>chevron_right</mat-icon></button>
+        <a mat-icon-button [routerLink]="['../']"><mat-icon>arrow_upward</mat-icon></a>
+        <button mat-icon-button (click)="print()"><mat-icon>print</mat-icon></button>
+        <span fxFlex></span>
+
+        <ng-container *nyxAuth="'edit:vessel'">
+            <div *ngIf="form.disabled">
+                <button mat-icon-button
+                        (click)="edit();">
+                    <mat-icon>edit</mat-icon>
+                </button>
+            </div>
+            <div *ngIf="form.enabled">
+                <button mat-icon-button 
+                        [disabled]="form.pristine && form.valid"
+                        (click)="save()">
+                    <mat-icon>save</mat-icon>
+                </button>
+                <button mat-icon-button 
+                        (click)="drop()">
+                    <mat-icon>highlight_off</mat-icon>
+                </button>
+            </div>
+        </ng-container>
+    </ng-container>
 </mat-toolbar>
-<mat-spinner *ngIf="!ready"></mat-spinner>
+
         
-<mat-tab-group dynamicHeight="false" *ngIf="ready">
+<form [formGroup]="form">
+<mat-tab-group *ngIf="ready">
     <mat-tab label="Embarcação">
         <div style="padding: 1em"></div>
-        
-        <form [formGroup]="form">
-            <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
-                <mat-form-field floatPlaceholder='always' fxFlex="60%">
-                    <input matInput required formControlName="vessel_name" placeholder="Nome da Embarcação">
-                </mat-form-field>
-                <mat-form-field floatPlaceholder='always' fxFlex="30%">
-                    <input matInput required formControlName="esn" placeholder="ESN">
-                </mat-form-field>
-            </div>
+        <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
+            <mat-form-field floatPlaceholder='always' fxFlex="60%">
+                <input matInput required formControlName="vessel_name" placeholder="Nome da Embarcação">
+            </mat-form-field>
+            <mat-form-field floatPlaceholder='always' fxFlex="30%">
+                <input matInput required formControlName="esn" placeholder="ESN">
+            </mat-form-field>
+        </div>
 
-            <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
-                <mat-form-field floatPlaceholder='always' fxFlex="40%">
-                    <input matInput type="number" formControlName="tank_capacity" placeholder="Arqueação Bruta">
-                </mat-form-field>
-                <mat-form-field floatPlaceholder='always' fxFlex="40%">
-                    <input matInput type="number" formControlName="crew_number" placeholder="N. Tripulantes">
-                </mat-form-field>
-            </div>
+        <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
+            <mat-form-field floatPlaceholder='always' fxFlex="40%">
+                <input matInput type="number" formControlName="tank_capacity" placeholder="Arqueação Bruta">
+            </mat-form-field>
+            <mat-form-field floatPlaceholder='always' fxFlex="40%">
+                <input matInput type="number" formControlName="crew_number" placeholder="N. Tripulantes">
+            </mat-form-field>
+        </div>
 
-            <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
-                <mat-form-field floatPlaceholder='always' fxFlex="30%">
-                    <input matInput formControlName="insc_number" placeholder="Inscrição">
-                </mat-form-field>
-                <mat-form-field floatPlaceholder='always' fxFlex="30%">
-                    <input matInput placeholder="Emitida em:" 
-                           [matDatepicker]="insc_issued" 
-                           formControlName="insc_issued">
-                    <mat-datepicker-toggle matSuffix [for]="insc_date"></mat-datepicker-toggle>
-                    <mat-datepicker #insc_date></mat-datepicker>
-                </mat-form-field> 
+        <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
+            <mat-form-field floatPlaceholder='always' fxFlex="30%">
+                <input matInput formControlName="insc_number" placeholder="Inscrição">
+            </mat-form-field>
+            <mat-form-field floatPlaceholder='always' fxFlex="30%">
+                <input matInput placeholder="Emitida em:" 
+                       [matDatepicker]="insc_issued" 
+                       formControlName="insc_issued">
+                <mat-datepicker-toggle matSuffix [for]="insc_date"></mat-datepicker-toggle>
+                <mat-datepicker #insc_date></mat-datepicker>
+            </mat-form-field> 
 
-                <mat-form-field floatPlaceholder='always' fxFlex="30%">
-                    <input matInput placeholder="Válida até" 
-                           [matDatepicker]="insc_expire" 
-                           formControlName="insc_expire">
-                    <mat-datepicker-toggle matSuffix [for]="insc_validity"></mat-datepicker-toggle>
-                    <mat-datepicker #insc_validity></mat-datepicker>
-                </mat-form-field> 
-            </div>
+            <mat-form-field floatPlaceholder='always' fxFlex="30%">
+                <input matInput placeholder="Válida até" 
+                       [matDatepicker]="insc_expire" 
+                       formControlName="insc_expire">
+                <mat-datepicker-toggle matSuffix [for]="insc_validity"></mat-datepicker-toggle>
+                <mat-datepicker #insc_validity></mat-datepicker>
+            </mat-form-field> 
+        </div>
 
-            <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
-                <mat-form-field floatPlaceholder='always' fxFlex="20%">
-                    <input matInput type="number" formControlName="ship_lenght" placeholder="Comprimento [m]">
-                </mat-form-field>
-                <mat-form-field floatPlaceholder='always' fxFlex="20%">
-                    <input matInput type="number" formControlName="ship_breadth" placeholder="Boca [m]">
-                </mat-form-field>
-                <mat-form-field floatPlaceholder='always' fxFlex="20%">
-                    <input matInput type="number" formControlName="draught_min" placeholder="Calado Min. [m]">
-                </mat-form-field>
-                <mat-form-field floatPlaceholder='always' fxFlex="20%">
-                    <input matInput type="number" formControlName="draught_max" placeholder="Calado Max. [m]">
-                </mat-form-field>
-            </div>
-        </form>
+        <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
+            <mat-form-field floatPlaceholder='always' fxFlex="20%">
+                <input matInput type="number" formControlName="ship_lenght" placeholder="Comprimento [m]">
+            </mat-form-field>
+            <mat-form-field floatPlaceholder='always' fxFlex="20%">
+                <input matInput type="number" formControlName="ship_breadth" placeholder="Boca [m]">
+            </mat-form-field>
+            <mat-form-field floatPlaceholder='always' fxFlex="20%">
+                <input matInput type="number" formControlName="draught_min" placeholder="Calado Min. [m]">
+            </mat-form-field>
+            <mat-form-field floatPlaceholder='always' fxFlex="20%">
+                <input matInput type="number" formControlName="draught_max" placeholder="Calado Max. [m]">
+            </mat-form-field>
+        </div>
     </mat-tab>
     <mat-tab label="Documentação">
         <div style="padding: 1em"></div>
-        <mat-selection-list>
-            <mat-list-option disabled>Termo de Responsabilidade</mat-list-option>
-            <mat-list-option disabled>Comprovante de Pagamento de Taxa</mat-list-option>
-            <mat-list-option disabled>Cópia do TIE da Embarcação</mat-list-option>
-            <mat-list-option disabled>Comprovante de Pagamento de Taxa</mat-list-option>
-            <mat-list-option disabled>Original da PPP</mat-list-option>
-            <mat-list-option disabled>Comprovante de Pagamento de Taxa (se acima de 8m)</mat-list-option>
+        <mat-selection-list (selectionChange)="checks($event)">
+            <mat-list-option checkboxPosition="before"
+                             [value]="c"
+                             [selected]="c.value"
+                             *ngFor="let c of vessel.checks">
+                {{c.check_desc}}
+            </mat-list-option>
         </mat-selection-list>
-
+    </mat-tab>
+    <mat-tab label="Permissionamento">
+        <div style="padding: 1em"></div>
+        <mat-selection-list (selectionChange)="perms($event)">
+            <mat-list-option checkboxPosition="before"
+                             [value]="p"
+                             [selected]="p.value"
+                             *ngFor="let p of vessel.perms">
+                {{p.fishingtype_desc}}
+            </mat-list-option>
+        </mat-selection-list>
     </mat-tab>
 </mat-tab-group>
+</form>
+</div>

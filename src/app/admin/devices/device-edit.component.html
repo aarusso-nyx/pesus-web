@@ -1,0 +1,46 @@
+<mat-card fxFlex="50%" fxLayout="column" fxFlexLayout="start center">
+<mat-toolbar fxFlex fxLayout="row" fxLayoutAlign="space-between center" role="heading">
+    <a mat-icon-button [routerLink]="['../']"><mat-icon>arrow_back</mat-icon></a>
+    <button mat-icon-button (click)="print()"><mat-icon>print</mat-icon></button>
+
+    <span fxFlex></span>
+    
+    <div *ngIf="form.disabled">
+        <button mat-icon-button *nyxAuth="'edit:device'"
+                (click)="edit()">
+            <mat-icon>edit</mat-icon>
+        </button>
+    </div>
+    <div *ngIf="form.enabled">
+        <button mat-icon-button type="submit"
+                [disabled]="form.pristine && form.valid"
+                (click)="save()">
+            <mat-icon>save</mat-icon>
+        </button>
+        <button mat-icon-button 
+                (click)="drop()">
+            <mat-icon>highlight_off</mat-icon>
+        </button>
+    </div>
+</mat-toolbar>
+<mat-spinner *ngIf="!ready"></mat-spinner>
+
+<form [formGroup]="form">
+    <div fxFlex fxLayout="row wrap" fxLayoutAlign="space-between" class="formdata">
+        <mat-form-field floatPlaceholder='always' fxFlex="65%">
+            <input matInput formControlName="vessel_name" placeholder="Nome">
+        </mat-form-field>
+        <mat-form-field floatPlaceholder='always' fxFlex="30%">
+            <input matInput formControlName="esn" placeholder="ESN">
+        </mat-form-field>
+        <mat-form-field floatPlaceholder='always' fxFlex="100%">
+            <mat-select placeholder="Cliente"
+                        formControlName="client_id">
+                <mat-option name="clients" *ngFor="let c of clients" [value]="c.client_id">
+                {{ c.client_name }}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
+    </div>
+</form>
+</mat-card>

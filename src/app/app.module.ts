@@ -23,6 +23,7 @@ registerLocaleData(localePt, 'pt', localePtExtra);
           OwlDateTimeIntl,
           OWL_DATE_TIME_LOCALE    } from 'ng-pick-datetime';
 
+import { MomentModule } from 'ngx-moment';
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -70,6 +71,8 @@ import { AuthGuard             } from './auth/auth.guard';
 import { AuthService           } from './auth/auth.service';
 import { AuthDirective         } from './auth/auth.directive';
 import { LoginComponent,
+         DeniedComponent,
+         PendingComponent,
          CallbackComponent     } from './auth/auth.component';
 
 import { AppRoutingModule      } from './app-routing.module';
@@ -87,13 +90,23 @@ import { PeopleListComponent,
          PeopleEditComponent   } from './config/people/people.component';
 import { VoyageListComponent,
          VoyageEditComponent   } from './voyages/voyages.component';
-                
+
+
+import { UserListComponent,
+         UserEditComponent     } from './admin/users/user.component';
+import { ClientListComponent,
+         ClientEditComponent   } from './admin/clients/client.component';
+import { DeviceListComponent,
+         DeviceEditComponent   } from './admin/devices/device.component';
+
 
 @NgModule({
   declarations: [
     AppComponent,
     ClientComponent,
     LoginComponent,
+    DeniedComponent,  
+    PendingComponent,
     CallbackComponent,
     PeopleListComponent,
     PeopleEditComponent,
@@ -106,6 +119,12 @@ import { VoyageListComponent,
     LatLonPipe,
     AuthDirective,
     ConfirmDialog,
+    UserListComponent,
+    UserEditComponent,
+    ClientListComponent,
+    ClientEditComponent,
+    DeviceListComponent,
+    DeviceEditComponent,
   ],
   imports: [
     BrowserModule,
@@ -116,6 +135,7 @@ import { VoyageListComponent,
     FormsModule,
     ReactiveFormsModule,
     HttpClientModule,
+    MomentModule,
     MatButtonModule, 
     MatButtonToggleModule, 
     MatCardModule,
