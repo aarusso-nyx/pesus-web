@@ -16,7 +16,7 @@ import { Voyage, Lance } from '../app.interfaces';
 export class VoyageService {
     private blacklist : string[] = ['crew','lances', 'ftype', 'master', 'vessel'];
     private qs: string;
-    private client_id: number;
+    private client_id: string;
     
     private voyageSource = new Subject<Voyage[]>();
 
@@ -28,8 +28,11 @@ export class VoyageService {
                  private config: ConfigService ) { 
         this.config.clientId
             .subscribe((id) => {
-                this.client_id = id;
-                this.qs = this.auth.can('view:all') ? '' : `?client_id=${id}`;                
+                this.auth.can('map:all')
+                    .subscribe(mode => {
+                        this.client_id = mode ? '' : id.toString();
+                        this.qs        = mode ? '' : `?client_id=${id}`;
+                    });
             });        
     }
 
@@ -37,7 +40,7 @@ export class VoyageService {
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     get seascape() : Observable<any> {
-        return this.http.get<any[]>(this.app.uri(`/sea/scape/${this.qs}`));
+        return this.http.get<any[]>(this.app.uri('/sea/scape/'+this.client_id));
     }
     
     getTrack(id) : Observable<any> {
