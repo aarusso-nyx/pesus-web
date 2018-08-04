@@ -14,7 +14,7 @@ import { MatDialog,
 
 import { Observable,of } from "rxjs";
 
-import { Client, User  } from '../admin.interfaces';
+import { Client, User, Status } from '../admin.interfaces';
 import { AdminService  } from '../admin.service';
 import { ConfirmDialog } from '../../dialogs/confirm.dialog';
 import { AuthService   } from '../../auth/auth.service';
@@ -34,30 +34,61 @@ import _countBy     from "lodash-es/countBy";
 export class ClientListComponent implements OnInit {
     @ViewChild(MatSort) sort: MatSort;
     clients: MatTableDataSource<Client>;
-    cols: string[] = ['client_name', 'cnpj', 'devices', 
-                      'users', 'status', 'since'];
+    cols: string[] = ['client_name', 'users', 'devices',
+                      'fleet', 'sail', 'dock', 'miss', 'lost'];
+
+    total: Status;
+    
     constructor( private app:    AppService,
                  private admin:  AdminService) { }
 
     ngOnInit() {
-        this.app.title = 'Administração de Clientes';      
+        this.app.title = 'Painel de Clientes';      
                 
         this.admin.getClients()
             .subscribe (clients => {
                 if ( !clients ) return;
+                
+                this.total = {
+                    fleet: 0,
+                    miss:  0,
+                    lost:  0,
+                    dock:  0,
+                    sail:  0
+                };
+
+                clients.forEach(c => {
+                    this.total.fleet += Number(c.status.fleet || 0);                    
+                    this.total.miss  += Number(c.status.miss  || 0);                    
+                    this.total.lost  += Number(c.status.lost  || 0);                    
+                    this.total.dock  += Number(c.status.dock  || 0);                    
+                    this.total.sail  += Number(c.status.sail  || 0);                    
+                })
             
                 this.admin.getUsers(false)
                     .subscribe(users => { 
                         clients.forEach(c => {
                             c.users = _countBy (users, 
-                                (u) => u.app_metadata.client.client_id == c.client_id);
+                                (u) => u.app_metadata && u.app_metadata.client.client_id == c.client_id);
                         })
+                    
                     
                         this.clients = _sortBy(clients, 'client_name');
                         this.clients.sort = this.sort;
                     });
             });
     }
+    
+    
+    public style(v) {
+        if ( v.lost > 0 ) {
+            return 'lost'; 
+        } else if ( v.miss > 0 ) {
+            return 'miss'; 
+        } else {
+            return 'seen'; 
+        }
+    }  
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -109,7 +140,10 @@ export class ClientEditComponent implements OnInit {
                     this.admin.getUsers(false)
                         .subscribe(users => {
                             if ( !users )  return; 
-                            client.users = users.filter ((u) => u.app_metadata.client.client_id == client.client_id)
+                        
+                            const belong = u => u.app_metadata && (u.app_metadata.client.client_id == client.client_id);
+                        
+                            client.users = users.filter (belong);
                             this.ready  = true;
                             this.client = client;
                             this.form.reset(this.client);

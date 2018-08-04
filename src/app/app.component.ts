@@ -17,7 +17,7 @@ import { AuthService   } from './auth/auth.service';
     styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-    title: string;
+    title: Observable<string>;
     logged: boolean;
     profile: any;
     handset: boolean;
@@ -26,9 +26,11 @@ export class AppComponent {
                 private router: Router,
                 private route:  ActivatedRoute,
                 public  auth:   AuthService,
-                private app:    AppService ) {
+                public  app:    AppService ) {
         auth.handleAuthentication();
         auth.scheduleRenewal();
+        
+        this.title = this.app.title$;
     }
 
     ngOnInit() {
@@ -50,8 +52,8 @@ export class AppComponent {
             .observe(Breakpoints.Handset)
             .subscribe(p => this.handset = p.matches);
 
-        this.app.title$
-            .subscribe(t => this.title = t);
+//        this.app.title$
+//            .subscribe(t => this.title = t);
 
         this.auth.profile
             .subscribe(p => this.profile = p);

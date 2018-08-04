@@ -3,7 +3,7 @@ import { ActivatedRoute,
          RoutesRecognized,
          Router }        from '@angular/router';
 
-import { Observable,  
+import { Observable, 
          BehaviorSubject,
          Subject }      from "rxjs";
 
@@ -17,7 +17,7 @@ export class AppService {
     private titleSource = new Subject<string>();
     
     private sidenavStatus$ = new BehaviorSubject<boolean>(true);
-    
+
     public last: string;
     
     ///////////////////////////////////////////////////////////////////////////////////
@@ -45,7 +45,7 @@ export class AppService {
     }
     
     set title(t: string) {
-//        this.titleSource.next(t);
+        this.titleSource.next(t);
     }
 
     get title$() {

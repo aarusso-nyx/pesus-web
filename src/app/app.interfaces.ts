@@ -143,3 +143,9 @@ export interface Address {
     cidade:             string; 
     estado:             string;     
 };
+
+export interface Area {
+    geometry_id:        number;
+    geometry_name:      string;
+    
+}

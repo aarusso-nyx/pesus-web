@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, 
          NavigationEnd,
          Router }        from '@angular/router';
@@ -7,6 +7,9 @@ import { FormBuilder,
          Validators    } from '@angular/forms';
 import { MatDialog, 
          MatDialogRef, 
+         MatTableDataSource,
+         MatPaginator, 
+         MatSort,
          MAT_DIALOG_DATA }  from '@angular/material';
 
 import { Observable,of } from "rxjs";
@@ -16,7 +19,8 @@ import { ConfigService } from '../config.service';
 import { ConfirmDialog } from '../../dialogs/confirm.dialog';
 import { AuthService   } from '../../auth/auth.service';
 import { AppService    } from '../../app.service';
-import { Vessel        } from '../../app.interfaces';
+import { VoyageService } from '../../voyages/voyages.service';
+import { Vessel, Client, Area } from '../../app.interfaces';
 
 import _omit from "lodash-es/omit";
 import _sortBy      from "lodash-es/sortBy";
@@ -29,26 +33,70 @@ import _sortBy      from "lodash-es/sortBy";
     styleUrls: ['./vessel.component.css']
 })
 export class VesselListComponent implements OnInit {
-    opened:  boolean;
-    vessels: Vessel[];
+    @ViewChild(MatSort) sort: MatSort;
     
-    constructor( private router: Router,
-                 private app:    AppService,
-                 private config: ConfigService) { }    
+    clients: Client[];
+    devices: MatTableDataSource<any>;
+    cols: string[] = ['client_name', 'esn', 'vessel_name', 
+                      'status', 'position', 'lastseen'];
+    
+    bShow: boolean = false;
+    client_id: number;
+    
+    constructor( private    app:    AppService,
+                 private    voy: VoyageService,
+                 private config: ConfigService) { 
+        this.app.title = 'Frota Ativa';      
+    }
 
-    ///////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////
     ngOnInit() {
-        this.app.title = 'Embarcações';      
+        this.voy.seascape
+            .subscribe (data => {
+                this.devices = new MatTableDataSource<any>(data);
+                this.devices.filterPredicate = (data, filter) : boolean => {
+                    return (this.bShow || (data.miss || data.lost)) &&
+                    ((this.client_id == null) || (this.client_id == data.client_id));        
+                }
+                this.devices.filter = 'start';
+        });
     
-        this.app.sidenav_status
-            .subscribe(v => this.opened = v);
-        
-        this.config.vessels
-            .subscribe ( (data) => this.vessels = _sortBy(data, 'vessel_name') );
+        this.config.clients
+            .subscribe ( (data) => this.clients = _sortBy(data, 'client_name') );
+    }
+    
+    
+    
+    public style(v) {
+        if ( v.lost ) {
+            return 'lost'; 
+        } else if ( v.miss ) {
+            return 'miss'; 
+        }
+    }      
+    
+    public status(v) {
+        if ( v.lost ) {
+            return 'Perdido'; 
+        } else if ( v.miss ) {
+            return 'Atrasado'; 
+        } else if ( v.sail ) {
+            return 'Navegando';
+        } else if ( v.dock ) {
+            return 'Atracado';
+        }
+    }  
+    
+    
+    public filterStatus(evt) {
+        this.bShow = evt.checked;
+        this.devices.filter = 'status';
+    }
+    
+    public filterClient(evt) {
+        this.client_id = evt.value;
+        this.devices.filter = 'client';
     }
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
@@ -64,6 +112,9 @@ export class VesselEditComponent implements OnInit {
     form:   FormGroup;
     vessel: Vessel;
 
+    clients: Client[];
+    ports: Area[];
+    
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     constructor(private route:  ActivatedRoute,
@@ -76,15 +127,13 @@ export class VesselEditComponent implements OnInit {
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     ngOnInit() {
-        this.app.sidenav_status
-            .subscribe (x => this.opened = x);
-        
         this.config.clientId
             .subscribe((id) => {
                 this.id = id;
             
                 // Create Form Group
                 this.form = this.fb.group({
+                      port_id:      '',
                     client_id:      this.id,
                     vessel_id:      '',
                     vessel_name:   ['', Validators.required],
@@ -101,6 +150,9 @@ export class VesselEditComponent implements OnInit {
                 });
             });
 
+        this.config.clients.subscribe(c => this.clients = c);
+        this.config.areas.subscribe  (p => this.ports   = p);
+        
         this.route.params.subscribe( addr => {
             this.ready = false;
             this.config.getVessel(addr.vessel_id)

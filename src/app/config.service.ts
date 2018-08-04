@@ -1,14 +1,17 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 
-import { Observable,
+import { Observable, of, timer,
+         Subscription,
          BehaviorSubject,
          Subject    } from "rxjs";
 
 import { filter, tap, 
          pluck, map } from 'rxjs/operators';
 
-import { Person, Wind, WindDir, Fish, FishingType, 
+import { Person, Wind, Area,
+         WindDir, Fish, 
+         FishingType, 
          Vessel, 
          Client     } from '../app.interfaces';
 
@@ -28,32 +31,31 @@ export class ConfigService {
     private WDir$ = new BehaviorSubject<WindDir[]>([]);
     private Fish$ = new BehaviorSubject<Fish[]>([]);
     private FTyp$ = new BehaviorSubject<FishingType[]>([]);
+    private Area$ = new BehaviorSubject<Area[]>([]);
 
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
-    constructor( public http: HttpClient,
-                 private config: ConfigService,
-                 private app: AppService,
+    constructor( private http: HttpClient,
+                 private app:  AppService,
                  private auth: AuthService ) {
     
         this.clientId.subscribe((id) => {
             this.client_id = id;
             this.qs = id ? `?client_id=${id}` : '';
                     
-        this.http.get<Wind[]> ( this.app.uri('/models/winds') )
-            .subscribe(data => this.Wind$.next(data));
+            this.http.get<Wind[]> ( this.app.uri('/models/winds') )
+                .subscribe(data => this.Wind$.next(data));
 
-        this.http.get<WindDir[]> ( this.app.uri('/models/winddir') )
-            .subscribe(data => this.WDir$.next(data));
+            this.http.get<WindDir[]> ( this.app.uri('/models/winddir') )
+                .subscribe(data => this.WDir$.next(data));
 
-        this.http.get<Fish[]> ( this.app.uri('/models/fishes') )
-            .subscribe(data => this.Fish$.next(data));
+            this.http.get<Fish[]> ( this.app.uri('/models/fishes') )
+                .subscribe(data => this.Fish$.next(data));
 
-        this.http.get<FishingType[]> ( this.app.uri('/models/fishingtypes') )
-            .subscribe(data => this.FTyp$.next(data));        
-        })
+            this.http.get<FishingType[]> ( this.app.uri('/models/fishingtypes') )
+                .subscribe(data => this.FTyp$.next(data));        
+        });
     }
-
     
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
@@ -82,7 +84,13 @@ export class ConfigService {
     delClientCheck(v: number, c: number) : Observable<any> {
         return this.http.delete ( this.app.uri(`/clients/${v}/check/${c}`) );
     }
-        
+
+    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
+    get areas() : Observable<Area[]> {
+        return this.http.get<Area[]> ( this.app.uri(`/areas`) );
+    }
+    
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     get vessels() :  Observable<Vessel[]> {

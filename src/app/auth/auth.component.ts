@@ -10,7 +10,6 @@ import { AppService   } from '../app.service';
 })
 export class CallbackComponent {
     constructor( private router: Router ) { 
-        this.router.navigate(['/map']);
     }
 }
 

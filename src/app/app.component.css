@@ -14,3 +14,8 @@
 .hidden {
     display: none;
 }
+
+.separator {
+    color: lightgray;
+    margin: auto 20px;
+}

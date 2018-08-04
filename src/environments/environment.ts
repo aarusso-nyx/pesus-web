@@ -6,8 +6,8 @@ export const environment = {
   production: false,
     
     clientId: 'rcTVNP9Lwo04AnvEUL8XWpC5McEFALo5',
-     baseURL: 'https://thiamat.nyxk.com.br:3000/api/1.0',
-    baseHost: 'thiamat.nyxk.com.br:3000',
+     baseURL: 'https://thiamat.nyxk.com.br:4040/api/1.0',
+    baseHost: 'thiamat.nyxk.com.br:4040',
  redirectUri:  window.location.origin+'/callback',
 
 };

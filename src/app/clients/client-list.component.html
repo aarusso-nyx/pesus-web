@@ -1,0 +1,87 @@
+<div fxLayout="column">
+<div fxLayout="row" fxLayoutAlign="start" class="header">
+    <button mat-button [routerLink]="['new']">
+        <mat-icon>add</mat-icon> Novo Cliente</button>
+    <span fxFlex></span>
+    <div fxFlex="10%" fxLayout="column" class="panel">
+        <span class="value">{{total?.fleet}}</span>
+        <span class="label">Frota</span>
+    </div>
+
+    <div fxFlex="10%" fxLayout="column" class="panel">
+        <span class="value">{{total?.sail}}</span>
+        <span class="label">Navegando</span>
+    </div>
+
+    <div fxFlex="10%" fxLayout="column" class="panel">
+        <span class="value">{{total?.dock}}</span>
+        <span class="label">Atracado</span>
+    </div>
+
+    <div fxFlex="10%" fxLayout="column" class="panel miss">
+        <span class="value">{{total?.miss}}</span>
+        <span class="label">Atrasados</span>
+    </div>
+
+    <div fxFlex="10%" fxLayout="column" class="panel lost">
+        <span class="value">{{total?.lost}}</span>
+        <span class="label">Perdidos</span>
+    </div>
+</div>
+
+<table mat-table matSort [dataSource]="clients">
+    <ng-container matColumnDef="client_name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Nome</th>
+        <td mat-cell *matCellDef="let element" class="text-left"> 
+            <a [routerLink]="element.client_id">{{element.client_name}}</a><br/>
+            <small><em>{{element.cnpj}}</em></small>
+        </td>
+    </ng-container>
+    <ng-container matColumnDef="users">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header class="text-center">Usuários</th>
+        <td mat-cell *matCellDef="let element"> 
+            {{element.users?.true}}
+        </td>
+    </ng-container>
+    <ng-container matColumnDef="devices">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Dispositivos</th>
+        <td mat-cell *matCellDef="let element"> 
+            {{element.devices?.length || '0'}}
+        </td>
+    </ng-container>
+    <ng-container matColumnDef="fleet">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Ativados</th>
+        <td mat-cell *matCellDef="let element"> 
+            {{element.status?.fleet}}
+        </td>
+    </ng-container>
+    <ng-container matColumnDef="sail">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Navegando</th>
+        <td mat-cell *matCellDef="let element"> 
+            {{element.status?.sail}}
+        </td>
+    </ng-container>
+    <ng-container matColumnDef="dock">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Atracados</th>
+        <td mat-cell *matCellDef="let element"> 
+            {{element.status?.dock}}
+        </td>
+    </ng-container>
+    <ng-container matColumnDef="miss">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Atrasados</th>
+        <td mat-cell *matCellDef="let element"
+            [ngClass]="{'miss': element.status.miss > 0 }"> 
+            {{element.status?.miss}}
+        </td>
+    </ng-container>
+    <ng-container matColumnDef="lost">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Perdidos</th>
+        <td mat-cell *matCellDef="let element" 
+            [ngClass]="{'lost': element.status.lost > 0 }"> 
+            {{element.status?.lost}}
+        </td>
+    </ng-container>
+    <tr mat-header-row *matHeaderRowDef="cols"></tr>
+    <tr mat-row *matRowDef="let row; columns: cols;"  class="text-center"></tr>
+</table>
+</div>

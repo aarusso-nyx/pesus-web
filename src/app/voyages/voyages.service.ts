@@ -1,7 +1,7 @@
 import { Injectable  } from '@angular/core';
 import { HttpClient  } from '@angular/common/http';
-import { Observable,
-         BehaviorSubject,
+import { Observable, Subscription,
+         BehaviorSubject, timer,
          Subject       } from "rxjs";
 
 import { ConfigService } from '../config/config.service';
@@ -18,11 +18,14 @@ export class VoyageService {
     private qs: string;
     private client_id: string;
     
+    private timer: Subscription;
+    private SeaScape$ = new BehaviorSubject<any[]>([]);
+    private FleetHealth$ = new BehaviorSubject<any[]>([]);
     private voyageSource = new Subject<Voyage[]>();
 
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
-    constructor( public  http: HttpClient,
+    constructor( private  http: HttpClient,
                  private auth: AuthService,
                  private  app: AppService,
                  private config: ConfigService ) { 
@@ -32,7 +35,21 @@ export class VoyageService {
                     .subscribe(mode => {
                         this.client_id = mode ? '' : id.toString();
                         this.qs        = mode ? '' : `?client_id=${id}`;
+                    
+                        // Subscribe to a 5min timer to refresh fleet map
+                        this.timer = timer(0, 300000).subscribe((i) => {
+                            this.http.get<any> ( this.app.uri(`/sea/scape/${this.client_id}`) )
+                                .subscribe(s => this.SeaScape$.next(s));
+
+                            this.http.get<any> ( this.app.uri(`/sea/fleethealth/${this.client_id}`) )
+                                .subscribe(s => this.FleetHealth$.next(s));
+                            
+                            if ( !this.auth.isAuthenticated() ) {
+                                this.timer.unsubscribe();
+                            }
+                        });        
                     });
+
             });        
     }
 
@@ -40,11 +57,19 @@ export class VoyageService {
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     get seascape() : Observable<any> {
-        return this.http.get<any[]>(this.app.uri('/sea/scape/'+this.client_id));
+        return this.SeaScape$.asObservable();
     }
     
+    get fleethealth() : Observable<any> {
+        return this.FleetHealth$.asObservable();
+    }
+        
     getTrack(id) : Observable<any> {
         return this.http.get<any[]>(this.app.uri(`/sea/track/${id}`));
+    }
+        
+    getZone(id) : Observable<any> {
+        return this.http.get<any[]>(this.app.uri(`/areas/${id}`));
     }
         
     ///////////////////////////////////////////////////////////////////

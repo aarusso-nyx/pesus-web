@@ -40,7 +40,7 @@ export class AuthService {
         redirectUri: environment.redirectUri,
         scope: 'openid'
         });
-
+    
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     public get logoff(): Observable<boolean> {
@@ -131,19 +131,14 @@ export class AuthService {
     public handleAuthentication() {
         this.auth0.parseHash((err, authResult) => {
             if (authResult && authResult.accessToken && authResult.idToken) {
-                console.log('aqui');
                 window.location.hash = '';
                 this.setSession(authResult);
                 this.identify();
                 this.router.navigate(['/map']);
             } else if (err) {
-                console.log('ali');
-                console.log(err);
                 this.logout();
             } else { /* Reloading */ 
-                console.log('acolá');
                 this.identify();
-                this.router.navigate(['/map']);
             }
         });
     }

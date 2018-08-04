@@ -92,6 +92,11 @@ mat-card {
     text-align: center;
 }
 
+.ol-scale-line {
+    margin-left: 90%;
+    bottom: 20px;
+}
+
 mat-table {
     margin: auto;
 }
@@ -133,4 +138,20 @@ mat-table {
 .nyx-tabs > div.active {
     color: black;
     border-bottom: 3px solid black;
+}
+
+
+
+/* ********************************************** */
+/* ********************************************** */
+.seen {
+    background-color: lightgreen;
+}
+
+.miss {
+    background-color: lightgoldenrodyellow;    
+}
+
+.lost {
+    background-color: lightcoral;    
 }

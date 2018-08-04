@@ -19,9 +19,10 @@ export interface User {
 export interface Client {
     client_id:      number;
     client_name:    string;
-    
-    users?:          User[];
-    devices?:        Device[];
+
+    status?:        Status;
+    users?:         User[];
+    devices?:       Device[];
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -32,3 +33,13 @@ export interface Device {
     client_id:      number;
     vessel_name:    string;
 }
+
+export interface Status { 
+    fleet:      number;
+    dock:       number;
+    miss:       number;
+    lost:       number;
+    sail:       number;
+};
+
+

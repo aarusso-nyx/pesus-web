@@ -1,6 +1,8 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { BreakpointObserver, Breakpoints, BreakpointState } from '@angular/cdk/layout';
-import { Observable } from 'rxjs';
+import { Observable, of,
+         BehaviorSubject } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 import { DatePipe } from '@angular/common';
 
@@ -9,12 +11,11 @@ import { HttpClient } from '@angular/common/http';
 import { MatDialog, 
          MatDialogRef, 
          MAT_DIALOG_DATA }  from '@angular/material';
-import { Subscription } from "rxjs";
 
 import { AppService }       from '../app.service';
 import { Fish, FishingType, Client,
          Lance, Crew, Voyage,
-         Person, Vessel, 
+         Person, Vessel, Area,
          WindDir, Wind } from '../app.interfaces';
 
 import { AuthService }      from '../auth/auth.service';
@@ -23,50 +24,65 @@ import { VoyageService }    from '../voyages/voyages.service';
 
 import { LatLonPipe       } from '../pipes/lat-lon.pipe';
 
-import { timer } from "rxjs";
 import * as moment from "moment";
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
-import OlMap from 'ol/map';
-import OlView from 'ol/view';
-import OlProj from 'ol/proj';
+import OlMap            from 'ol/Map';
+import OlView           from 'ol/View';
+import OlProj           from 'ol/Proj';
+import OlFeature        from 'ol/Feature';
+import OlOverlay        from 'ol/Overlay';
+import OlGraticule      from 'ol/Graticule';
 
-import OlSourceOSM from 'ol/source/osm';
-import OlBingMaps from 'ol/source/bingmaps';
-import OlSourceVector from 'ol/source/vector';
-import OlSourceCluster from 'ol/source/cluster';
+import { toStringXY, 
+         toStringHDMS } from 'ol/coordinate';
 
-import OlVectorLayer from 'ol/layer/vector';
-import OlTileLayer from 'ol/layer/tile';
-import OlLayerGroup from 'ol/layer/group';
-import OlFeature from 'ol/feature';
-import OlLineString from 'ol/geom/linestring';
-import OlPoint from 'ol/geom/point';
 
-import OlFormatGeoJSON from 'ol/format/geojson';
+import OlSourceOSM      from 'ol/source/OSM';
+import OlBingMaps       from 'ol/source/BingMaps';
+import OlSourceVector   from 'ol/source/Vector';
+import OlSourceCluster  from 'ol/source/Cluster';
 
-import OlInteraction from 'ol/interaction';
-import OlInteractionDragRotateAndZoom from 'ol/interaction/dragrotateandzoom';
-import OlSelect from 'ol/interaction/select';
+import OlVectorLayer    from 'ol/layer/Vector';
+import OlTileLayer      from 'ol/layer/Tile';
+import OlLayerGroup     from 'ol/layer/Group';
 
-import OlCoord from 'ol/coordinate';
-import OlOverlay from 'ol/overlay';
-import OlGraticule from 'ol/graticule';
+import OlLineString     from 'ol/geom/LineString';
+import OlPoint          from 'ol/geom/Point';
 
-import OlCircle from 'ol/style/circle';
-import OlStroke from 'ol/style/stroke';
-import OlStyle from 'ol/style/style';
-import OlFill from 'ol/style/fill';
-import OlText from 'ol/style/text';
-import OlIcon from 'ol/style/icon';
+import OlFormatGeoJSON  from 'ol/format/GeoJSON';
 
-import OlControl from 'ol/control';
-import OlControlScaleLine  from 'ol/control/scaleline';
-import OlControlZoomSlider from 'ol/control/zoomslider';
-import OlMousePosition from 'ol/control/mouseposition';
+import OlInteraction    from 'ol/interaction/Interaction';
+import OlSelect         from 'ol/interaction/Select';
+import OlInteractionDragRotateAndZoom from 'ol/interaction/DragRotateAndZoom';
+
+import OlCircle         from 'ol/style/Circle';
+import OlStroke         from 'ol/style/Stroke';
+import OlStyle          from 'ol/style/Style';
+import OlFill           from 'ol/style/Fill';
+import OlText           from 'ol/style/Text';
+import OlIcon           from 'ol/style/Icon';
+
+import OlControl            from 'ol/control/Control';
+import OlMousePosition      from 'ol/control/MousePosition';
+import OlControlScaleLine   from 'ol/control/ScaleLine';
+import OlControlZoomSlider  from 'ol/control/ZoomSlider';
+import OlAttribution        from 'ol/control/Attribution';
 
 import _sortBy from "lodash-es/sortBy";
+import _extend from "lodash-es/extend";
+import _remove from "lodash-es/remove";
+import _pull from "lodash-es/pull";
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
+interface FeatureCache {
+    feature:OlFeature;
+    tag:    OlFeature;
+};
+
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
@@ -117,19 +133,27 @@ export class MapsComponent implements OnInit {
     tooltip:   HTMLElement;
     extent:    number[] = [-71, -21, -7, 21];
     
-    timer: Subscription;
     isHandset: Observable<BreakpointState> = this.breakpointObserver.observe(Breakpoints.Handset);    
     
     // Enumerables
+    areas:   Area[];
     clients: Client[];
     vessels: Vessel[];
     vessel_: Vessel[];
     
-    // Authorization
+    // Caches
+    marx:    number[]       = [];
+    trax:    FeatureCache[] = [];
+    geos:    OlFeature[]    = [];
+    
+    // Style parameters
     grade:   boolean = true;
     fleet:   boolean = false;
     names:   boolean = true;
     track:   boolean = true;
+    
+    minRange: any;
+    maxRange: any;
     
     // Cluster Radius - for SourceCluster
     cRadius: number = 40;
@@ -157,6 +181,7 @@ export class MapsComponent implements OnInit {
         this.auth.can('map:all')
             .subscribe(v => {
                 this.config.clients.subscribe(c => this.clients = _sortBy(c,'client_name'));
+                this.config.areas.subscribe(c => this.areas = _sortBy(c,'geometry_name'));
         });
         
         // Get all Vessels 
@@ -164,11 +189,13 @@ export class MapsComponent implements OnInit {
             .subscribe (v => {
                 this.vessel_ = _sortBy(v,['client.client_name', 'vessel_name']);
                 this.vessels = this.vessel_;
+            
+                this.marx = this.vessel_.map(x => x.vessel_id); 
         });
         
         // Set-up Layers and Controls        
-        this.pos3857 = new OlMousePosition({ projection: 'EPSG:3857', coordinateFormat: OlCoord.createStringXY(4)});
-        this.pos4326 = new OlMousePosition({ projection: 'EPSG:4326', coordinateFormat: OlCoord.toStringHDMS });
+        this.pos3857 = new OlMousePosition({ projection: 'EPSG:3857', coordinateFormat: toStringXY});
+        this.pos4326 = new OlMousePosition({ projection: 'EPSG:4326', coordinateFormat: toStringHDMS });
 
         this.graticule = new OlGraticule({showLabels: true});
         this.center = new OlView({  projection: 'EPSG:4326',
@@ -179,50 +206,55 @@ export class MapsComponent implements OnInit {
         
         ///////////////////////////////////////////////////////////////////////////////
         ///////////////////////////////////////////////////////////////////////////////
+        this.minRange = moment().toDate();
+        this.maxRange = moment().subtract(30,'days').toDate();
+        
+        ///////////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////
         // Setup all layers
         this.setLayers();
-        
-        // Subscribe to a 5min timer to refresh fleet map
-        this.timer = timer(0, 300000).subscribe((i) => {
-            this.Ship.getSource().getSource().clear();
-            this.voy.seascape
-                .subscribe((data) => {
-                    data.map((p) => {
-                        p.geometry = new OlPoint([p.lon, p.lat], 'XY');
-                        this.Ship.getSource().getSource().addFeature(new OlFeature(p));
-                        });
-                });
+        this.voy.seascape
+            .subscribe((data) => {
+                this.Ship.getSource().getSource().clear();
+                data.map((p) => {
+                    p.geometry = new OlPoint([p.lon, p.lat], 'XY');
+                    this.Ship.getSource().getSource().addFeature(new OlFeature(p));
+                    });
             });
-        
-        // Unsubscribe on Logoff
-        this.auth.logoff.subscribe(() => this.timer.unsubscribe() );
     }
     
 
     /////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////
     ngOnInit() {
-        const controls: OlControl = this.isHandset ?
-              OlControl.defaults({ attribution: false, zoom: false }) : 
-              OlControl.defaults().extend([ this.pos4326, 
-                                            new OlControlScaleLine(),
-                                            new OlControlZoomSlider() ]);
-        
-        this.map = new OlMap ({ view: this.center,
-                              target: 'map-map',
-                            controls: controls,
-                              layers: [
-                                new OlLayerGroup({ title: 'Base Layer', layers: [this.OSM,  this.DHN,  this.SAT ] }),
-                                new OlLayerGroup({ title: 'Geo Local',  layers: [this.Ship, this.Path, this.Tags] }),
-                                new OlLayerGroup({ title: 'Aux. Data',  layers: [this.Area, this.Port, this.Bath] }),
-                                ],
-                        interactions: OlInteraction.defaults().extend([ new OlInteractionDragRotateAndZoom(), 
-                                                                        this.select ]),
-                });        
-     
+        this.isHandset.subscribe(mobile => {
+            this.map = new OlMap ({ view: this.center,
+                                  target: 'map-map',
+                                  layers: [
+                                    new OlLayerGroup({ title: 'Base Layer', layers: [this.OSM,  this.DHN,  this.SAT ] }),
+                                    new OlLayerGroup({ title: 'Geo Local',  layers: [this.Ship, this.Path, this.Tags] }),
+                                    new OlLayerGroup({ title: 'Aux. Data',  layers: [this.Area, this.Port, this.Bath] }),
+                                    ],
+                    });
+
+            this.map.addInteraction(new OlInteractionDragRotateAndZoom());
+            this.map.addInteraction(this.select);
+            
+            if ( !mobile.matches ) {
+                this.map.addControl(new OlControlScaleLine());
+                this.map.addControl(new OlControlZoomSlider());
+            }
+            
+            this.map.getControls().forEach(c => {
+                if ( c instanceof OlAttribution ) {
+                    this.map.removeControl(c);
+                }
+            });
+            
+        })
         ///////////////////////////////////////////////////////////////////////
         ///////////////////////////////////////////////////////////////////////
-        this.graticule.setMap(this.map);
+//        this.graticule.setMap(this.map);
         
         this.tooltip = document.getElementById('popup');
         this.overlay = new OlOverlay({ element: this.tooltip,
@@ -276,27 +308,16 @@ export class MapsComponent implements OnInit {
 
     /////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////
-    public goto(p) {
-        this.map.getView().setCenter(p);
-        if ( p.zoom )
-            this.map.getView().setZoom(p.zoom);
-    }
-    
     public reset() {
         this.center.fit(this.extent, {duration: 1500});
     }
 
-    public radiusChange() {
-        const src = this.Ship.getSource().getSource();
-        this.Ship.setSource (new OlSourceCluster({ distance: this.cRadius, source: src }));
-        this.redraw(this.Ship);
+    public seek(v) {
+        const p = [v.lon, v.lat];
+        const z = this.center.getZoom() + 3;
+        this.center.fit (new OlPoint(p), {maxZoom: z});
     }
-    
-    public tracksChange() {
-        this.redraw(this.Path);
-        this.redraw(this.Tags);
-    }
-    
+
     /////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////
     private redraw ( l: OlVectorLayer ) {
@@ -329,7 +350,7 @@ export class MapsComponent implements OnInit {
         this.DHN = new OlTileLayer ({ type: 'base', visible: false,
                                      title: 'DHN Raster Charts', 
                                     source: new OlSourceOSM({
-                                            url: 'https://maps.nyxk.com.br/raster/dhn/{z}/{x}/{y}.png'
+                                            url: 'https://maps.pesus.com.br/dhn/{z}/{x}/{y}.png'
                                             })  
         });
 
@@ -354,8 +375,8 @@ export class MapsComponent implements OnInit {
         });
 
         // Areas
-        this.Area = new OlVectorLayer ({title: 'Areas', visible: false, 
-                                       style: this.styleScape.bind(this),
+        this.Area = new OlVectorLayer ({title: 'Areas', visible: true, 
+                                       style: this.styleZones.bind(this),
                                       source: new OlSourceVector()  
         });
 
@@ -412,6 +433,16 @@ export class MapsComponent implements OnInit {
     
     /////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////
+    public filterClient(evt) {
+        this.vessels = this.vessel_.filter (v => (evt.value == undefined) || v.client_id == evt.value);
+    }
+
+    public radiusChange() {
+        const src = this.Ship.getSource().getSource();
+        this.Ship.setSource (new OlSourceCluster({ distance: this.cRadius, source: src }));
+        this.redraw(this.Ship);
+    }
+    
     public options(evt) {
         switch (evt.option.value) {
             case 'names':
@@ -449,15 +480,26 @@ export class MapsComponent implements OnInit {
         }        
     }
     
-    public tracks(evt) {
-        this.Path.getSource().clear(true);
-        this.Tags.getSource().clear(true);
-        evt.source.selectedOptions.selected.map(v => {
-            if ( v.selected ) {
-                this.voy.getTrack(v.value.vessel_id)
-                    .subscribe((data) => {
+    /////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////
+    public markers (evt, v: Vessel) {
+        if ( evt.checked ) {
+            this.marx.push(v.vessel_id);
+        } else {
+            _pull(this.marx, v.vessel_id);
+        }
+        this.redraw(this.Ship);
+    }
+    
+    public tracks(evt, v: Vessel) {
+        const id = v.vessel_id;
+        let obs: Observable<FeatureCache>;
+
+        if ( this.trax[id] === undefined ) {
+            obs = this.voy.getTrack(v.vessel_id)
+                    .pipe ( map((data) => {
                         const coords = data.map(p => [p[1], p[2]]);
-                        const feats  = data.map(p => new OlFeature({
+                        const tag = data.map(p => new OlFeature({
                                 t: moment.unix(p[0]).format('HH:mm'),
                                 d: moment.unix(p[0]).format('DD/MMM'),
                                 geometry: new OlPoint([p[1], p[2]]),
@@ -465,25 +507,64 @@ export class MapsComponent implements OnInit {
                                 dir: p[4],
                         }));
                     
-                        this.Path.getSource()
-                            .addFeature(new OlFeature({
+                        const f: FeatureCache = {
+                            tag: tag,
+                            feature: new OlFeature({
                                 geometry: new OlLineString(coords, 'XY')
-                            }) );
-                    
-                        this.Tags.getSource()
-                            .addFeatures(feats);
-                    });
+                            }),  
+                        };
+                
+                        return f;
+                    }) );
+        } else {
+            obs = of(this.trax[id])
+        }
+        
+        
+        obs.subscribe (f => {
+            if ( evt.checked ) {
+                this.trax[id] = f;
+                this.Path.getSource().addFeature(f.feature);
+                this.Tags.getSource().addFeatures(f.tag);
+            } else {
+                this.Path.getSource().removeFeature(f.feature);
+                f.tag.map ( y => this.Tags.getSource().removeFeature(y) );
             }
         });
     }
-        
+           
+    public zones (evt) {
+        const id = evt.option.value.geometry_id;
+        let obs: Observable<OlFeature>;
 
-    ///////////////////////////////////////////////////////////////////////////
-    ///////////////////////////////////////////////////////////////////////////
-    public filterClient(evt) {
-        this.vessels = this.vessel_.filter (v => (evt.value == undefined) || v.client_id == evt.value);
+        if ( this.geos[id] === undefined ) {
+            obs = this.voy.getZone(id).pipe ( map(z => new OlFormatGeoJSON().readFeature(z)) );
+        } else {
+            obs = of(this.geos[id])
+        }
+                
+        obs.subscribe (f => {
+            if ( evt.option.selected ) {
+                console.log(f);
+                this.geos[id] = f;
+                this.Area.getSource().addFeature(f);
+            } else {
+                this.Area.getSource().removeFeature(f);
+            }
+        });
     }
-
+    
+    /////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////
+    public marked(v: Vessel) : boolean {
+        return this.marx.includes(v.vessel_id);
+    }
+    /////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////
+    public changeRange() {
+        console.log(this.minRange, this.maxRange);
+    }
+    
     /////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////
@@ -494,25 +575,31 @@ export class MapsComponent implements OnInit {
         const prop = feature.getProperties()
         if ( !prop.tstamp )
             return
-                    
-        const t_ = (new Date()).getTime();    
-        const t0 = (new Date(prop.tstamp)).getTime();    
-        const dt = (t_ - t0) / 1000;
         
-        let color;
-        if ( dt < 1800 ) {
-            color = 'lime';
-        } else if ( dt < 43200 ) { 
-            color = 'darkorange';
-        } else {
-            color = 'firebrick';
+        if ( !this.marx.some (v => v == prop.vessel_id) ) {
+            return;
         }
-
+            
+            
+        let image;
+        if ( prop.lost ) {
+            image = new OlCircle({ radius: 5,
+                                  fill: new OlFill({color: 'lime'}),
+                                  stroke: new OlStroke({color: 'lightgray', width: 2 }) });
+        } else if ( prop.miss ) {
+            image = new OlCircle({ radius: 8,
+                                  fill: new OlFill({color: 'darkorange'}),
+                                  stroke: new OlStroke({color: 'red', width: 3 }) });
+        } else {
+            image = new OlCircle({ radius: 5,
+                                  fill: new OlFill({color: 'firebrick'}),
+                                  stroke: new OlStroke({color: 'red', width: 2 }) });
+        }
+        
+        
         const style = [
             new OlStyle ({
-                image: new OlCircle({ radius: 5,
-                                      fill: new OlFill({color: color}),
-                                      stroke: new OlStroke({color: 'lightgray', width: 2 }) })
+                image: image
             }) 
         ];
         
@@ -549,13 +636,17 @@ export class MapsComponent implements OnInit {
     private styleCluster (feature, resolution) {
         if (feature.get('features').length == 1)
             return this.styleScape(feature.get('features')[0],resolution);
-                                                                  
+        
+        const len =  feature.get('features')
+                        .filter(f => this.marx.findIndex( x => { return x == f.getProperties().vessel_id }) != -1 )
+                        .length.toString()
+        
         return new OlStyle ({ 
-            image: new OlIcon({  src: 'assets/vessel-cluster.png' }),
-            text:  new OlText({ text: feature.get('features').length.toString(),
-                                       font: '20px sans-serif',
-                                     stroke: new OlStroke({ color: '#fff', width: 3 }),
-                                       fill: new OlFill({color: '#6EB193'    }) }) })
+            image: new OlIcon({ src: 'assets/vessel-cluster.png' }),
+            text:  new OlText({text: len,
+                               font: '20px sans-serif',
+                             stroke: new OlStroke({ color: '#fff', width: 3 }),
+                               fill: new OlFill({color: '#6EB193'    }) }) })
     }
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -640,5 +731,15 @@ export class MapsComponent implements OnInit {
         this.last_ = feature;
         return track;        
     }
+    
+    /////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////
+    private styleZones (feature, resolution) {
+        const prop = feature.getProperties();
+        return new OlStyle({
+            stroke: new OlStroke({ color: 'blue', width: 3}),
+            fill: new OlFill({color: [0.7, 0.7, 0.7, 0.3]})
+        });
+    }    
 }
 

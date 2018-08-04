@@ -17,6 +17,8 @@
     min-width: 280px;
 }
 
+
+
 /* ******************************************************* */
 /* ******************************************************* */
 .popup-link {
@@ -40,9 +42,9 @@
 /* ******************************************************* */
 .fabs {
     position: absolute;
-    top: 10px;
-    left: 10px;
+    left: 50px;
     padding: 10px;
+    z-index: 1;
 }
 
 .fabs button {
@@ -64,4 +66,13 @@
 .mat-dialog-content {
     max-height: inherit !important;
     min-height: 35vh;
+}
+
+.trigger {
+    font-size: 12px;
+}
+
+mat-accordion {
+    flex-grow: 1;
+    overflow: auto;
 }

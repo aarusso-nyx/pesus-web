@@ -3,11 +3,9 @@
     <mat-spinner [diameter]="20" [strokeWidth]="4" *ngIf="!ready"></mat-spinner>
     
     <ng-container *ngIf="ready">
-        <button mat-icon-button (click)="app.sidenav_close()" *ngIf="opened"><mat-icon>chevron_left</mat-icon></button>
-        <button mat-icon-button (click)="app.sidenav_open()"  *ngIf="!opened"><mat-icon>chevron_right</mat-icon></button>
         <a mat-icon-button [routerLink]="['../']"><mat-icon>arrow_upward</mat-icon></a>
         <button mat-icon-button (click)="print()"><mat-icon>print</mat-icon></button>
-        <span fxFlex></span>
+        <span fxFlex><span class="text-center">{{vessel.vessel_name}}</span></span>
 
         <ng-container *nyxAuth="'edit:vessel'">
             <div *ngIf="form.disabled">
@@ -34,6 +32,11 @@
         
 <form [formGroup]="form">
 <mat-tab-group *ngIf="ready">
+    <mat-tab label="Situação">
+        <div style="padding: 1em"></div>
+        {{vessel.status| json}}
+        
+    </mat-tab>        
     <mat-tab label="Embarcação">
         <div style="padding: 1em"></div>
         <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
@@ -45,6 +48,20 @@
             </mat-form-field>
         </div>
 
+        <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
+            <mat-select placeholder="Cliente"
+                        formControlName="client_id">
+                <mat-option name="clients" *ngFor="let c of clients" [value]="c.client_id">
+                {{ c.client_name }}
+                </mat-option>
+            </mat-select>
+            <mat-select placeholder="Porto de Origem"
+                        formControlName="port_id">
+                <mat-option name="ports" *ngFor="let p of ports" [value]="p.port_id">
+                {{ p.port_name }}
+                </mat-option>
+            </mat-select>
+        </div>
         <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
             <mat-form-field floatPlaceholder='always' fxFlex="40%">
                 <input matInput type="number" formControlName="tank_capacity" placeholder="Arqueação Bruta">
@@ -111,6 +128,15 @@
                 {{p.fishingtype_desc}}
             </mat-list-option>
         </mat-selection-list>
+    </mat-tab>
+    <mat-tab label="Viagens">
+        <div style="padding: 1em"></div>
+    </mat-tab>
+    <mat-tab label="Alarmes">
+        <div style="padding: 1em"></div>
+    </mat-tab>
+    <mat-tab label="Eventos">
+        <div style="padding: 1em"></div>
     </mat-tab>
 </mat-tab-group>
 </form>

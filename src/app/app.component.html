@@ -5,38 +5,34 @@
             <mat-icon>language</mat-icon>
         </a>
 
-        <!-- Admin -->
-        <a mat-icon-button routerLinkActive="active" routerLink="/admin/clients" 
-           class="icon" aria-label="Clientes" matTooltip="Clients" *nyxAuth="'read:client'">
-            <mat-icon>account_balance</mat-icon>
-        </a>
-        <a mat-icon-button routerLinkActive="active" routerLink="/admin/devices"    
-           class="icon" aria-label="Dispositivos" matTooltip="Dispositivos" *nyxAuth="'read:device'">
-            <mat-icon>directions_boat</mat-icon>
-        </a>
-        <a mat-icon-button routerLinkActive="active" routerLink="/admin/users"    
-           class="icon" aria-label="Usuários" matTooltip="Usuários" *nyxAuth="'read:user'">
-            <mat-icon>people</mat-icon>
-        </a>
-
         <!-- User -->
-        <a mat-icon-button routerLinkActive="active" routerLink="/crew" 
-           class="icon" aria-label="Pescadores" matTooltip="Pescadores" *nyxAuth="'read:crew'">
-            <mat-icon>person</mat-icon>
-        </a>
         <a mat-icon-button routerLinkActive="active" routerLink="/vessels"    
            class="icon" aria-label="Embarcações" matTooltip="Embarcações" *nyxAuth="'read:vessel'">
             <mat-icon>directions_boat</mat-icon>
+        </a>
+        <a mat-icon-button routerLinkActive="active" routerLink="/crew" 
+           class="icon" aria-label="Pescadores" matTooltip="Pescadores" *nyxAuth="'read:crew'">
+            <mat-icon>person</mat-icon>
         </a>
         <a mat-icon-button routerLinkActive="active" routerLink="/voyages" 
            class="icon" aria-label="Produção" matTooltip="Produção" *nyxAuth="'read:voyage'">
             <mat-icon>waves</mat-icon>
         </a>
         
+        <!-- Admin -->
+        <mat-icon class="separator">more_vert</mat-icon>
+        <a mat-icon-button routerLinkActive="active" routerLink="/admin/clients" 
+           class="icon" aria-label="Clientes" matTooltip="Clients" *nyxAuth="'read:client'">
+            <mat-icon>account_balance</mat-icon>
+        </a>
+        <a mat-icon-button routerLinkActive="active" routerLink="/admin/users"    
+           class="icon" aria-label="Usuários" matTooltip="Usuários" *nyxAuth="'read:user'">
+            <mat-icon>people</mat-icon>
+        </a>
         
         <!-- Spacing -->
         <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
-            <div fxFlex fxLayoutAlign="center" *ngIf="!handset"><span>{{title}}</span></div>
+            <div fxFlex fxLayoutAlign="center" *ngIf="!handset"><span>{{title|async}}</span></div>
         </div>
 
         <a mat-menu-item *nyxAuth="'read:profile'"

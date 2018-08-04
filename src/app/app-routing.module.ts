@@ -20,8 +20,6 @@ import { UserListComponent,
          UserEditComponent     } from './admin/users/user.component';
 import { ClientListComponent,
          ClientEditComponent   } from './admin/clients/client.component';
-import { DeviceListComponent,
-         DeviceEditComponent   } from './admin/devices/device.component';
 
 const routes: Routes = [
     {
@@ -60,13 +58,15 @@ const routes: Routes = [
     },
     {
         path: 'vessels',
-        data: { roles: ['read:vessel', 'edit:vessel'] },
+        data: { roles: ['read:vessel'] },
         component: VesselListComponent,
         canActivate: [AuthGuard],
-        children: [{
-        path: ':vessel_id',
-         component: VesselEditComponent
-        }]
+    },
+    {
+        path: 'vessels/:vessel_id',
+        data: { roles: ['read:vessel', 'edit:vessel'] },
+        component: VesselEditComponent,
+        canActivate: [AuthGuard],
     },
     {
         path: 'admin',
@@ -90,16 +90,6 @@ const routes: Routes = [
             data: { roles: ['read:user', 'edit:user'] },
             canActivate: [AuthGuard],
             component: UserEditComponent,
-            },{
-            path: 'devices',
-            data: { roles: ['read:device', 'create:device', 'delete:device'] },
-            canActivate: [AuthGuard],
-            component: DeviceListComponent,
-            },{
-            path: 'devices/:vessel_id',
-            data: { roles: ['read:device', 'edit:device', 'create:device', 'delete:device'] },
-            canActivate: [AuthGuard],
-            component: DeviceEditComponent,
             }]
     },    
     {

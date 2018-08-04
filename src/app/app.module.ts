@@ -57,6 +57,7 @@ import { MatButtonModule,
          MatToolbarModule,
          MatTooltipModule,
        MAT_DATE_LOCALE }         from '@angular/material';
+import {ScrollDispatchModule} from '@angular/cdk/scrolling';
 
 import { JwtModule } from '@auth0/angular-jwt';
 
@@ -91,13 +92,10 @@ import { PeopleListComponent,
 import { VoyageListComponent,
          VoyageEditComponent   } from './voyages/voyages.component';
 
-
 import { UserListComponent,
          UserEditComponent     } from './admin/users/user.component';
 import { ClientListComponent,
          ClientEditComponent   } from './admin/clients/client.component';
-import { DeviceListComponent,
-         DeviceEditComponent   } from './admin/devices/device.component';
 
 
 @NgModule({
@@ -123,8 +121,6 @@ import { DeviceListComponent,
     UserEditComponent,
     ClientListComponent,
     ClientEditComponent,
-    DeviceListComponent,
-    DeviceEditComponent,
   ],
   imports: [
     BrowserModule,
@@ -164,6 +160,7 @@ import { DeviceListComponent,
     MatTooltipModule,
     MatNativeDateModule, 
     MatRippleModule,
+    ScrollDispatchModule,
     JwtModule.forRoot({
                 config: {
                 tokenGetter: tokenGetter,
