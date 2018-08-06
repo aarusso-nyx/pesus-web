@@ -1,3 +1,6 @@
+<mat-toolbar #tab fxLayout="row" fxLayoutAlign="start center">
+    <span fxFlex class="text-center">Usuários Cadastrados</span>
+</mat-toolbar>
 <table mat-table matSort [dataSource]="users">
     <ng-container matColumnDef="picture">
         <th mat-header-cell *matHeaderCellDef></th>

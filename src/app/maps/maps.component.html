@@ -1,6 +1,6 @@
-<mat-sidenav-container>
-    <mat-sidenav #menu opened="true" fxLayout="column" fxLayoutAlign="start stretch">
-        <div fxLayout="row" fxLayoutAlign="space-around" class="nyx-tabs" style="padding-top:16px">
+<mat-drawer-container>
+    <mat-drawer #menu class="drawer" opened="true" fxLayout="column" fxLayoutAlign="start stretch">
+        <div fxLayout="row" fxLayoutAlign="space-around" class="nyx-tabs">
             <div fxFlex fxLayoutAlign="center center" 
                  (click)="menu.page=0" 
                  [ngClass]="{'active': !menu.page}">
@@ -19,9 +19,9 @@
             </div>
         </div>
         
-        <div [ngSwitch]="menu.page">
-            <div *ngSwitchCase="1" fxLayout="column">
-                <span class="section">Mostrar:</span>
+        <div [ngSwitch]="menu.page" class="drawer-content">
+            <div *ngSwitchCase="1" fxLayout="column" class="drawer-tab">
+                <span class="caption">Mostrar:</span>
                 <mat-selection-list (selectionChange)="options($event)">
                     <mat-list-option checkboxPosition="before" value="names" [selected]="names">Nomes</mat-list-option>
                     <mat-list-option checkboxPosition="before" value="fleet" [selected]="fleet">Armador</mat-list-option>
@@ -29,43 +29,44 @@
                     <mat-list-option checkboxPosition="before" value="track" [selected]="track">Waypoints</mat-list-option>
                 </mat-selection-list>
 
-                <span class="section">Camadas de Dados:</span>
+                <span class="caption">Camadas de Dados:</span>
                 <mat-selection-list (selectionChange)="layers($event)">
                     <mat-list-option checkboxPosition="before" value="fleet" selected="true">Frota</mat-list-option>
                     <mat-list-option checkboxPosition="before" value="areas" selected="true">Áreas</mat-list-option>
-                    <mat-list-option checkboxPosition="before" value="ports" selected="true" disabled>Portos</mat-list-option>
-                    <mat-list-option checkboxPosition="before" value="baths" selected="true" disabled>Batimetria</mat-list-option>
-                    <mat-list-option checkboxPosition="before" value="plats" selected="true" disabled>Plataformas</mat-list-option>
+                    <mat-list-option checkboxPosition="before" value="ports" selected="false" disabled>Portos</mat-list-option>
+                    <mat-list-option checkboxPosition="before" value="baths" selected="false" disabled>Batimetria</mat-list-option>
+                    <mat-list-option checkboxPosition="before" value="plats" selected="false" disabled>Plataformas</mat-list-option>
                 </mat-selection-list>
 
-                <span class="section">Camadas Base:</span>
+                <span class="caption">Camadas Base:</span>
                 <mat-button-toggle-group  (change)="baseLayers($event)" class="filters">
                     <mat-button-toggle fxFlex="33%" value="osm" checked="true">Mapa</mat-button-toggle>
                     <mat-button-toggle fxFlex="33%" value="sat">Sat.</mat-button-toggle>
                     <mat-button-toggle fxFlex="33%" value="dhn">D.H.N.</mat-button-toggle>
                 </mat-button-toggle-group>        
 
-                <span class="section">Posição em:</span>
+                <span class="caption">Posição em:</span>
                 <mat-button-toggle-group  (change)="coords($event)" class="filters">
                     <mat-button-toggle fxFlex="33%" value="nil" checked="true">Sem</mat-button-toggle>
                     <mat-button-toggle fxFlex="33%" value="utm">UTM</mat-button-toggle>
                     <mat-button-toggle fxFlex="33%" value="dms">DMS</mat-button-toggle>
                 </mat-button-toggle-group>        
 
-                <span class="section">Agrupamento:</span><br/>
-                <mat-slider fxFlex thumbLabel class="filters slider"
+                <span class="caption">Agrupamento:</span>
+                <mat-slider fxFlex thumbLabel class="slider"
                             step="20" min="0" max="100" 
                             (change)="radiusChange()"
                             [(ngModel)]="cRadius"></mat-slider>
-
-                <span class="section">Espaçamento:</span><br/>
-                <mat-slider fxFlex thumbLabel class="filters slider"
+                
+                <br/>
+                <span class="caption">Espaçamento:</span>
+                <mat-slider fxFlex thumbLabel class="slider"
                             step="20" min="20" max="100" 
                             (change)="tracksChange()"
                             [(ngModel)]="cTracks"></mat-slider>
             </div>
-            <div *ngSwitchCase="2">
-                <p class="section">Áreas:</p>
+            <div *ngSwitchCase="2" fxLayout="column" class="drawer-tab">
+                <span class="caption">Áreas:</span>
                 <mat-selection-list (selectionChange)="zones($event)">
                     <mat-list-option checkboxPosition="before" [value]="a"
                                      *ngFor="let a of areas">
@@ -117,17 +118,20 @@
                 <mat-accordion fxFlexFill cdkScrollable>
                     <mat-expansion-panel *ngFor="let v of vessels">
                         <mat-expansion-panel-header>
-                            <mat-panel-title>
+                            <mat-panel-title fxLayoutAlign="start center">
                                 <mat-icon *ngIf="marked(v)">star</mat-icon>
                                 <mat-icon *ngIf="!marked(v)">star_border</mat-icon>
-                                <span style="padding-left: 0.7em">{{v.vessel_name}}</span>
-                                <small *nyxAuth="'map:all'">{{v.client_name}}</small>
+                                <div fxLayout="column" style="padding-left: 0.7em">
+                                    <span>{{v.vessel_name}}</span>
+                                    <small *nyxAuth="'map:all'">{{v.client_name}}</small>
+                                </div>
                             </mat-panel-title>
                         </mat-expansion-panel-header>
                         <div fxLayout="row wrap" fxLayoutAlign="start">
                             <div fxFlex="100%" fxLayout="row" fxLayoutAlign="space-between center">
                                 <a [routerLink]="'/vessels/'+v.vessel_id">detalhes</a>
-                                <button mat-icon-button (click)="seek(v.status)"><mat-icon>pin_drop</mat-icon></button>
+                                <button mat-icon-button matTooltip="Localizar"
+                                        (click)="seek(v)"><mat-icon>pin_drop</mat-icon></button>
                             </div>
                             <mat-checkbox [checked]="true" (change)="markers($event,v)">Mostrar no Mapa</mat-checkbox>
                             <mat-checkbox (change)="tracks($event,v)">Traçar Rota</mat-checkbox>
@@ -136,16 +140,29 @@
                 </mat-accordion>
             </div>
         </div>
-    </mat-sidenav>
+    </mat-drawer>
     
-    <mat-sidenav-content>
+    <mat-drawer-content>
         <div id="map-map">
-        <div class="fabs">
-            <button mat-fab (click)="menu.open()"><mat-icon>menu</mat-icon></button>
-            <button mat-fab (click)="reset()"><mat-icon>gps_fixed</mat-icon></button>
-        </div>
-        
+            <div class="fabs">
+                <button mat-fab (click)="menu.open()"><mat-icon>menu</mat-icon></button>
+                <button mat-fab (click)="reset()"><mat-icon>gps_fixed</mat-icon></button>
+            </div>
         </div>    
-        <div id="popup" class="ol-popup"></div>
-    </mat-sidenav-content>
-</mat-sidenav-container>
+        <div id="popup" class="ol-popup" fxLayout="column">
+            <a class="popup-link" [routerLink]="['/vessels/'+selected?.vessel_id]">
+                {{selected?.vessel_name}} <small>({{selected?.esn}})</small>
+            </a>
+            <span>
+                {{[selected?.lon, selected?.lat] | latLon}}
+            </span>
+            <span *ngIf="selected?.sog !== null && selected?.head !== null">
+                {{selected?.sog * 1852/3600}} kn &ang;  {{selected?.head}}&deg; ({{selected?.head|headTo}})
+            </span>
+            <span>
+                {{selected?.tstamp | amFromUnix | amLocal | amDateFormat: 'HH:mm DD/MMM'}}
+                <small>({{selected?.tstamp | amFromUnix | amTimeAgo}})</small>        
+            </span>        
+        </div>
+    </mat-drawer-content>
+</mat-drawer-container>

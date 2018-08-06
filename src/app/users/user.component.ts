@@ -6,9 +6,8 @@ import { MatTableDataSource,
 import { ActivatedRoute, 
          Router }        from '@angular/router';
 
-import { User, Client  } from '../admin.interfaces';
-import { AdminService  } from '../admin.service';
-import { AppService    } from '../../app.service';
+import { User, Client  } from '../app.interfaces';
+import { ApiService    } from '../api.service';
 
 import _sortBy from "lodash-es/sortBy";
 import _pick   from "lodash-es/pick";
@@ -29,12 +28,10 @@ export class UserListComponent implements OnInit {
     cols: string[] = ['picture', 'email', 'username', 
                       'login_counts', 'last_login', 'client'];
     
-    constructor( private app: AppService, 
-                 public admin: AdminService) { }
+    constructor( private api: ApiService) { }
     
     ngOnInit() {
-        this.app.title = 'Usuários (admin)';      
-        this.admin.users
+        this.api.users
             .subscribe(data => { 
                 this.users = new MatTableDataSource<User>(data);
                 this.users.sort = this.sort; 
@@ -60,9 +57,8 @@ export class UserEditComponent implements OnInit {
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     constructor(private router: Router,
-                private route:  ActivatedRoute,
-                private admin:  AdminService,
-                public    app:  AppService ) { }
+                private  route: ActivatedRoute,
+                private    api: ApiService ) { }
 
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
@@ -76,13 +72,13 @@ export class UserEditComponent implements OnInit {
         this.user = data;
         this.client_id = data.app_metadata.client.client_id;
         
-        this.admin.clients
+        this.api.clients
             .subscribe ( (clients) => { 
                 this.clients = _sortBy(clients, 'client_name');
                 this.clients.unshift(noClient);
             });        
 
-        this.admin.roles
+        this.api.roles
             .subscribe ( (roles) => {
                 this.ready = true;
                 this.roles = roles.map(r => {
@@ -95,7 +91,7 @@ export class UserEditComponent implements OnInit {
     ///////////////////////////////////////////////////////////////////
     ngOnInit() {
         this.route.params.subscribe( addr => {
-            this.admin.getUser(addr.user_id)
+            this.api.getUser(addr.user_id)
                 .subscribe(this.self);
         });
     }
@@ -105,7 +101,7 @@ export class UserEditComponent implements OnInit {
     engage() {
         const client = this.clients.find(c => c.client_id == this.client_id);
         const load = { app_metadata: { client: _pick(client, ['client_id', 'client_name']) } };
-        this.admin.putUser(this.user.user_id, load)
+        this.api.putUser(this.user.user_id, load)
             .subscribe(this.self);
     }  
         
@@ -113,9 +109,9 @@ export class UserEditComponent implements OnInit {
     ///////////////////////////////////////////////////////////////////
     change(evt,role_id) {
         if ( evt.checked ) {
-            this.admin.setRoles(this.user.user_id, [role_id]).subscribe();
+            this.api.setRoles(this.user.user_id, [role_id]).subscribe();
         } else {
-            this.admin.delRoles(this.user.user_id, [role_id]).subscribe();
+            this.api.delRoles(this.user.user_id, [role_id]).subscribe();
         }
     }
 }

@@ -1,7 +1,7 @@
 #map-map {
     background-color: aqua;
     width: 100%;
-    height: 93vh;
+    height: calc(100vh - 64px);
 }
 
 .ol-popup {
@@ -16,27 +16,6 @@
     left: -50px;
     min-width: 280px;
 }
-
-
-
-/* ******************************************************* */
-/* ******************************************************* */
-.popup-link {
-    display: inline-flex;
-    color: black;
-    font-weight: bold;
-    text-decoration: none;
-}
-
-
-.popup-pos {
-    display: inline-flex;
-}
-
-.popup-tstamp {
-    display: inline-flex;
-}
-
 
 /* ******************************************************* */
 /* ******************************************************* */
@@ -68,6 +47,10 @@
     min-height: 35vh;
 }
 
+mat-selection-list {
+    padding-top: 0px;
+}
+    
 .trigger {
     font-size: 12px;
 }
@@ -75,4 +58,29 @@
 mat-accordion {
     flex-grow: 1;
     overflow: auto;
+}
+
+.slider {
+    padding: 8px 0px; 
+}
+
+.drawer {
+    width: 300px;
+}
+
+.drawer-tab { 
+    padding: 0px 16px;
+}
+
+.drawer-content {
+  overflow: auto;
+  position: absolute;
+  bottom:0;
+  left:0;
+  right:0;
+  top:64px;
+}
+
+.caption {
+    margin-top: 1em;
 }

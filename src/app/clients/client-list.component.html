@@ -1,7 +1,7 @@
-<div fxLayout="column">
-<div fxLayout="row" fxLayoutAlign="start" class="header">
-    <button mat-button [routerLink]="['new']">
-        <mat-icon>add</mat-icon> Novo Cliente</button>
+<mat-toolbar fxLayout="row" fxLayoutAlign="space-between center">
+    <button mat-button [routerLink]="['new']" fxFlexOffset="2%">
+        <mat-icon>add</mat-icon> Novo Cliente
+    </button>
     <span fxFlex></span>
     <div fxFlex="10%" fxLayout="column" class="panel">
         <span class="value">{{total?.fleet}}</span>
@@ -27,7 +27,7 @@
         <span class="value">{{total?.lost}}</span>
         <span class="label">Perdidos</span>
     </div>
-</div>
+</mat-toolbar>
 
 <table mat-table matSort [dataSource]="clients">
     <ng-container matColumnDef="client_name">
@@ -84,4 +84,3 @@
     <tr mat-header-row *matHeaderRowDef="cols"></tr>
     <tr mat-row *matRowDef="let row; columns: cols;"  class="text-center"></tr>
 </table>
-</div>

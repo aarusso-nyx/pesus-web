@@ -1,7 +1,5 @@
-<div fxFlex fxLayout="column" fxLayoutAlign="center" fxFlexFill>
-<mat-toolbar fxFlex="80%" fxLayout="row" fxLayoutAlign="space-between center" class="filters">
-    <mat-checkbox fxFlex="20%" (change)="filterStatus($event)">Mostrar Todos</mat-checkbox>
-    <mat-form-field floatPlaceholder='auto' fxFlex="20%" *nyxAuth="'map:all'">
+<mat-toolbar fxLayout="row" fxLayoutAlign="space-between center">
+    <mat-form-field fxFlex="20%" fxFlexOffset="5%" [floatLabel]="'never'" *nyxAuth="'map:all'">
         <mat-select placeholder="Clientes" (selectionChange)="filterClient($event)">
             <mat-option>Todos</mat-option>
             <mat-option name="clients" *ngFor="let c of clients" [value]="c.client_id">
@@ -9,13 +7,21 @@
             </mat-option>
         </mat-select>
     </mat-form-field>
+    <span fxFlex="50%" class="text-center">Frota</span>
+    <div fxFlex="25%" fxLayout="row" fxLayoutAlign="end">
+        <mat-checkbox [labelPosition]="'before'"
+                      (change)="filterStatus($event)">
+            Mostrar Todos
+        </mat-checkbox>
+    </div>
+    <span fxFlex="5%"></span>
 </mat-toolbar>
 
-<table mat-table matSort [dataSource]="devices">
+<table mat-table matSort [dataSource]="vessels">
     <ng-container matColumnDef="client_name">
         <th mat-header-cell *matHeaderCellDef>Cliente</th>
         <td mat-cell *matCellDef="let element"> 
-            <a [routerLink]="'/admin/clients/'+element.client_id"> {{element.client_name}}</a>
+            <a [routerLink]="'/clients/'+element.client_id"> {{element.client_name}}</a>
         </td>
     </ng-container>
     <ng-container matColumnDef="esn">
@@ -49,7 +55,6 @@
         </td>
     </ng-container>
 
-    <tr mat-header-row *matHeaderRowDef="cols"></tr>
-    <tr mat-row *matRowDef="let row; columns: cols;" [ngClass]="style(row)"></tr>
+    <tr mat-header-row *matHeaderRowDef="vessels_cols"></tr>
+    <tr mat-row *matRowDef="let row; columns: vessels_cols;" [ngClass]="style(row)"></tr>
 </table>
-</div>

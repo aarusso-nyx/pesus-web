@@ -1,21 +1,22 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute,
          Router }        from '@angular/router';
 import { FormBuilder,
          FormGroup,
          Validators    } from '@angular/forms';
-import { MatDialog, 
+import { MatTableDataSource,
+         MatPaginator, 
+         MatSort,
+         MatDialog, 
          MatDialogRef, 
          MAT_DIALOG_DATA }  from '@angular/material';
 
-import { Observable,of } from "rxjs";
-import { filter, pairwise } from "rxjs/operators";
+import { Observable, of } from "rxjs";
 
-import { ConfigService } from '../config.service';
-import { ConfirmDialog } from '../../dialogs/confirm.dialog';
-import { AuthService   } from '../../auth/auth.service';
-import { AppService    } from '../../app.service';
-import { Person        } from '../../app.interfaces';
+import { ApiService     } from '../api.service';
+import { ConfirmDialog  } from '../dialogs/confirm.dialog';
+import { AuthService    } from '../auth/auth.service';
+import { Person, Client } from '../app.interfaces';
 
 import _omit        from "lodash-es/omit";
 import _sortBy      from "lodash-es/sortBy";
@@ -28,23 +29,34 @@ import _sortBy      from "lodash-es/sortBy";
     styleUrls: ['./people.component.css']
 })
 export class PeopleListComponent implements OnInit {
-    opened: boolean;
-    people: Person[];
-      
-    constructor( private app:    AppService,
-                 private config: ConfigService) {
-    }    
+    @ViewChild(MatSort) sort: MatSort;
+    
+    client_id: number;
+    clients: Client[];
+
+    people: MatTableDataSource<Person>;
+    people_cols: string[] = ['person_name'];
+    
+    constructor(private api: ApiService) { }    
 
     ngOnInit() {
-        this.app.title = 'Pessoas';      
+        this.api.people
+            .subscribe (data => { 
+                this.people = new MatTableDataSource<Person>(_sortBy(data, 'person_name'));
+                this.people.filterPredicate = (data, filter) : boolean => {
+                    return (this.client_id == null) || (this.client_id == data.client_id);        
+                }
+                this.people.filter = 'start';
+                this.people.sort = this.sort;
+        });
         
-        this.app.sidenav_status
-            .subscribe(v => this.opened = v);
-        
-        this.config.getPeople()
-            .subscribe ( (data) => this.people = _sortBy(data, 'person_name') );
-
-        this.config.refreshPeople();
+        this.api.clients
+            .subscribe ( (data) => this.clients = _sortBy(data, 'client_name') );
+    }
+    
+    public filterClient(evt) {
+        this.client_id = evt.value;
+        this.people.filter = 'client';
     }
 }
 
@@ -59,7 +71,6 @@ export class PeopleEditComponent implements OnInit {
     id:     number;
     fresh:  boolean = true;
     ready:  boolean = false;
-    opened:   boolean;
 
     person: Person;
     form: FormGroup;
@@ -70,22 +81,18 @@ export class PeopleEditComponent implements OnInit {
                 private route:  ActivatedRoute,
                 private router: Router,
                 private dialog: MatDialog,
-                private app:    AppService,
-                private config: ConfigService) { }
+                private api: ApiService) { }
 
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     ngOnInit() {
-        this.app.sidenav_status
-            .subscribe (x => this.opened = x);
-
         this.route.params.subscribe( addr => {            
             let obs: Observable<Person>;
             
             if ( addr.person_id === 'new') {
                 obs = of({ client_id: this.id, master: false });
             } else {
-                obs = this.config.getPerson(addr.person_id);
+                obs = this.api.getPerson(addr.person_id);
             }
             
             obs.subscribe( (data) => {
@@ -98,7 +105,7 @@ export class PeopleEditComponent implements OnInit {
             });
         });
          
-        this.config.clientId
+        this.api.clientId
             .subscribe((id) => {
                 this.id = id;
             
@@ -147,10 +154,9 @@ export class PeopleEditComponent implements OnInit {
                 })
             .afterClosed().subscribe(result => {
                 if ( result && !this.fresh ) {
-                    this.config.delPerson(this.person.person_id)
+                    this.api.delPerson(this.person.person_id)
                         .subscribe(() => {
                             this.router.navigate(['../'], { relativeTo: this.route });
-                            this.config.refreshPeople();
                     });
                 }
             });
@@ -163,22 +169,22 @@ export class PeopleEditComponent implements OnInit {
         const load = _omit(this.form.value, 'person_id');
         
         if ( this.fresh ) {
-            this.config.postPerson(load)
+            this.api.postPerson(load)
                 .subscribe((data) => { 
                     this.person = data; 
 
                     this.form.reset(this.person);
                     this.form.disable();
-                    this.config.refreshPeople();
                     this.router.navigate([`../${data.person_id}`], { relativeTo: this.route });
+                    this.api.updatePeople();
                 });
         } else {
-            this.config.putPerson(id, load)
+            this.api.putPerson(id, load)
                 .subscribe((data) => { 
                     this.person = this.form.value;
                     this.form.reset(this.person);
                     this.form.disable();
-                    this.config.refreshPeople();
+                    this.api.updatePeople();
                 });
         }
     }    

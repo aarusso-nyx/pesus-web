@@ -1,0 +1,28 @@
+.voyage-list {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.voyage-list-header {
+    border-bottom: 2px solid darkgray;
+}
+
+.voyage-list-item {
+    border-bottom: 1px solid lightgray;
+}
+
+/* ********************************************** */
+/* ********************************************** */
+.past {
+    background-color: lightgray;
+}
+
+.prog {
+/*    background-color: lightgoldenrodyellow;    */
+}
+
+.open {
+    font-weight: bold;
+/*    background-color: lightcoral;    */
+}

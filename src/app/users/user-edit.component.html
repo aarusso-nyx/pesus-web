@@ -1,82 +1,92 @@
-<mat-card fxLayout="column">
-    <mat-card-header>
-        <mat-spinner [diameter]="20" [strokeWidth]="4" *ngIf="!ready"></mat-spinner>
-        <div fxLayout="row" *ngIf="ready">
-            <img mat-card-avatar src="{{user?.picture}}">
-            <div fxFlex fxLayout="column" fxLayoutAlign="start" fxFlexOffset="2em">
-                <h1 mat-card-title>{{user?.name}}</h1>
-                <h2 mat-card-subtitle>{{user?.nickname}}</h2>
-            </div>
+<mat-toolbar #tab fxLayout="row" fxLayoutAlign="start center">
+    <mat-spinner [diameter]="20" [strokeWidth]="4" *ngIf="!ready"></mat-spinner>
+    <ng-container *ngIf="ready">
+        <div fxFlex="25%" fxLayout="row" fxLayoutAlign="start">
+            <a mat-icon-button [routerLink]="['../']">
+                <mat-icon>chevron_left</mat-icon>
+            </a>
+            <button mat-icon-button (click)="print()">
+                <mat-icon>print</mat-icon>
+            </button>
         </div>
-    </mat-card-header>
+        <span fxFlex="50%" class="text-center">{{this.user.name}}</span>
+        <ng-container [ngSwitch]="tab.page">
+            <!-- Autorizações-->
+            <span *ngSwitchCase="1" fxFlex fxLayoutAlign="end">
+                <button mat-icon-button matTooltip="Engajar"
+                        (click)="engage();">
+                    <mat-icon>save</mat-icon>
+                </button>
+            </span>
 
-    <mat-card-content  *ngIf="ready">
-        <mat-tab-group>
-            <mat-tab label="Autorizações" *nyxAuth="'edit:user'">
-                <div fxLayout="column">
-                    <p fxFlex class="section">Cliente Associado</p>
-                    <mat-form-field fxFlex floatPlaceholder='always'>
-                        <mat-select name="client" placeholder="Cliente" [(ngModel)]="client_id">
-                            <mat-option *ngFor="let c of clients" [value]="c.client_id">
-                                {{ c.client_name }}
-                            </mat-option>
-                        </mat-select>
-                    </mat-form-field>
+            <!-- Informações-->
+            <span *ngSwitchDefault></span>
+        </ng-container>
+    </ng-container>
+</mat-toolbar>
 
-                    <p fxFlex class="section">Autorizações</p>
-                    <div fxLayout="column">
-                        <ng-container *ngFor="let r of roles">
-                            <mat-checkbox (change)="change($event,r._id)" [(ngModel)]="r.state">{{r.description}}</mat-checkbox>        
-                        </ng-container>
-                    </div>
-                </div>
-            </mat-tab>
-            <mat-tab label="Informações">
-                <div style="padding: 1em"></div>
-                <p fxFlex fxLayout="row">
-                    <strong fxFlex="20%" class="text-right">Cliente:</strong>
-                    <span fxFlexOffset="3em">{{user?.app_metadata?.client?.client_name}}</span>
-                </p>
-                <p fxFlex fxLayout="row">
-                    <strong fxFlex="20%" class="text-right">Email:</strong>
-                    <span fxFlexOffset="3em">{{user?.email}} 
-                        <mat-icon *ngIf="user?.email_verified" class="verified">verified_user</mat-icon>
-                    </span>
-                </p>
-                <p fxFlex fxLayout="row">
-                    <strong fxFlex="20%" class="text-right">Logins:</strong>
-                    <span fxFlexOffset="3em">{{user?.logins_count}}</span>
-                </p>
-                <p fxFlex fxLayout="row">
-                    <strong fxFlex="20%" class="text-right">Último Login:</strong>
-                    <span fxFlexOffset="3em">{{user?.last_login|date:'full'}}</span>
-                </p>
-                <p fxFlex fxLayout="row">
-                    <strong fxFlex="20%" class="text-right">Último IP:</strong>
-                    <span fxFlexOffset="3em">{{user?.last_ip}}</span>
-                </p>
-                <p fxFlex fxLayout="row">
-                    <strong fxFlex="20%" class="text-right">Criado em:</strong>
-                    <span fxFlexOffset="3em">{{user?.created_at|date:'full'}}</span>
-                </p>
-                <p fxFlex fxLayout="row">
-                    <strong fxFlex="20%" class="text-right">Atualizado em:</strong>
-                    <span fxFlexOffset="3em">{{user?.created_at|date:'full'}}</span>
-                </p>
-                <p fxFlex fxLayout="row">
-                    <strong fxFlex="20%" class="text-right">App metadata:</strong>
-                    <span fxFlexOffset="3em">{{user?.app_metadata  | json}}</span>
-                </p>
-                <p fxFlex fxLayout="row">
-                    <strong fxFlex="20%" class="text-right">User metadata:</strong>
-                    <span fxFlexOffset="3em">{{user?.user_metadata | json}}</span>
-                </p>
-            </mat-tab>
-        </mat-tab-group>
-    </mat-card-content>
+<mat-tab-group *ngIf="ready" [(selectedIndex)]="tab.page">
+    <mat-tab label="Informações">
+        <div style="padding: 1em"></div>
+        <div fxLayout="row">
+            <div flFlex="20%" fxLayout="row" fxLayoutAlign="end">
+                <img class="avatar-large" src="{{user?.picture}}" alt="avatar">
+            </div>
+            <dl fxFlex >
+                <dt>Nickname:</dt>
+                <dd>{{user?.nickname}}</dd>
+            
+                <dt>Cliente:</dt>
+                <dd>{{user?.app_metadata?.client?.client_name}}</dd>
+            
+                <dt>Email:</dt>
+                <dd>{{user?.email}} 
+                    <mat-icon *ngIf="user?.email_verified" class="verified">
+                        verified_user
+                    </mat-icon>
+                </dd>
+            
+                <dt>Logins:</dt>
+                <dd>{{user?.logins_count}}</dd>
+            
+                <dt>Último Login:</dt>
+                <dd>{{user?.last_login|date:'full'}}</dd>
+                
+                <dt>Último IP:</dt>
+                <dd>{{user?.last_ip}}</dd>
+                
+                <dt>Criado em:</dt>
+                <dd>{{user?.created_at|date:'full'}}</dd>
+                
+                <dt>Atualizado em:</dt>
+                <dd>{{user?.created_at|date:'full'}}</dd>
+                
+                <dt>App metadata:</dt>
+                <dd>{{user?.app_metadata  | json}}</dd>
+                
+                <dt>User metadata:</dt>
+                <dd>{{user?.user_metadata | json}}</dd>
+            </dl>
+        </div>
+    </mat-tab>
+    <mat-tab label="Autorizações" *nyxAuth="'edit:user'">
+        <div style="padding: 1em"></div>
+        <div class="form" fxFlex fxFlexFill fxLayout="column">
+            <span fxFlex class="caption">Cliente Associado</span>
+            <mat-form-field fxFlex floatPlaceholder='always'>
+                <mat-select name="client" placeholder="Cliente" [(ngModel)]="client_id">
+                    <mat-option *ngFor="let c of clients" [value]="c.client_id">
+                        {{ c.client_name }}
+                    </mat-option>
+                </mat-select>
+            </mat-form-field>
 
-    <mat-card-actions fxLayoutAlign="end">
-        <button mat-button (click)="engage()">Salvar</button>
-        <a mat-button [routerLink]="['../']">Voltar</a>
-    </mat-card-actions>
-</mat-card>
+            <span fxFlex class="caption">Autorizações</span>
+            <div fxLayout="column">
+                <ng-container *ngFor="let r of roles">
+                    <mat-checkbox (change)="change($event,r._id)" [(ngModel)]="r.state">{{r.description}}</mat-checkbox>        
+                </ng-container>
+            </div>
+        </div>    
+    </mat-tab>
+</mat-tab-group>

@@ -2,27 +2,20 @@ import { Component, OnInit, Inject } from '@angular/core';
 import { BreakpointObserver, Breakpoints, BreakpointState } from '@angular/cdk/layout';
 import { Observable, of,
          BehaviorSubject } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map             } from 'rxjs/operators';
 
-import { DatePipe } from '@angular/common';
-
-import { ActivatedRoute }   from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient     }   from '@angular/common/http';
 import { MatDialog, 
          MatDialogRef, 
          MAT_DIALOG_DATA }  from '@angular/material';
 
-import { AppService }       from '../app.service';
 import { Fish, FishingType, Client,
          Lance, Crew, Voyage,
-         Person, Vessel, Area,
-         WindDir, Wind } from '../app.interfaces';
+         Person, Scape, Area,
+         WindDir, Wind    } from '../app.interfaces';
 
+import { ApiService }       from '../api.service';
 import { AuthService }      from '../auth/auth.service';
-import { ConfigService }    from '../config/config.service';
-import { VoyageService }    from '../voyages/voyages.service';
-
-import { LatLonPipe       } from '../pipes/lat-lon.pipe';
 
 import * as moment from "moment";
 
@@ -34,10 +27,6 @@ import OlProj           from 'ol/Proj';
 import OlFeature        from 'ol/Feature';
 import OlOverlay        from 'ol/Overlay';
 import OlGraticule      from 'ol/Graticule';
-
-import { toStringXY, 
-         toStringHDMS } from 'ol/coordinate';
-
 
 import OlSourceOSM      from 'ol/source/OSM';
 import OlBingMaps       from 'ol/source/BingMaps';
@@ -70,17 +59,19 @@ import OlControlScaleLine   from 'ol/control/ScaleLine';
 import OlControlZoomSlider  from 'ol/control/ZoomSlider';
 import OlAttribution        from 'ol/control/Attribution';
 
+import { toStringXY, 
+         toStringHDMS } from 'ol/coordinate';
+
 import _sortBy from "lodash-es/sortBy";
 import _extend from "lodash-es/extend";
 import _remove from "lodash-es/remove";
 import _pull from "lodash-es/pull";
 
-
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 interface FeatureCache {
-    feature:OlFeature;
-    tag:    OlFeature;
+    feature:    OlFeature;
+    tag:        OlFeature;
 };
 
 
@@ -131,6 +122,7 @@ export class MapsComponent implements OnInit {
     overlay:   OlOverlay;
     center:    OlView;
     tooltip:   HTMLElement;
+    selected:  any;
     extent:    number[] = [-71, -21, -7, 21];
     
     isHandset: Observable<BreakpointState> = this.breakpointObserver.observe(Breakpoints.Handset);    
@@ -138,8 +130,8 @@ export class MapsComponent implements OnInit {
     // Enumerables
     areas:   Area[];
     clients: Client[];
-    vessels: Vessel[];
-    vessel_: Vessel[];
+    vessels: Scape[];
+    vessel_: Scape[];
     
     // Caches
     marx:    number[]       = [];
@@ -166,31 +158,14 @@ export class MapsComponent implements OnInit {
     constructor( private breakpointObserver: BreakpointObserver,
                  private dialog: MatDialog,
                  private http: HttpClient,
-                 private datepipe: DatePipe,
-                 private route: ActivatedRoute,
-                 private config: ConfigService,
-                 private auth:   AuthService,
-                 private app:   AppService,
-                 private voy:  VoyageService,
-                 private latlon: LatLonPipe ) { 
-
-        // Set Route Title
-        this.app.title = 'Mapa de Embarcações';
+                 private api: ApiService,
+                 private auth:   AuthService) { 
 
         // If can view all Fleet
         this.auth.can('map:all')
             .subscribe(v => {
-                this.config.clients.subscribe(c => this.clients = _sortBy(c,'client_name'));
-                this.config.areas.subscribe(c => this.areas = _sortBy(c,'geometry_name'));
-        });
-        
-        // Get all Vessels 
-        this.config.vessels
-            .subscribe (v => {
-                this.vessel_ = _sortBy(v,['client.client_name', 'vessel_name']);
-                this.vessels = this.vessel_;
-            
-                this.marx = this.vessel_.map(x => x.vessel_id); 
+                this.api.clients.subscribe(c => this.clients = _sortBy(c,'client_name'));
+                this.api.areas.subscribe(c => this.areas = _sortBy(c,'geometry_name'));
         });
         
         // Set-up Layers and Controls        
@@ -213,10 +188,14 @@ export class MapsComponent implements OnInit {
         ///////////////////////////////////////////////////////////////////////////////
         // Setup all layers
         this.setLayers();
-        this.voy.seascape
-            .subscribe((data) => {
+        this.api.seascape
+            .subscribe((vessels) => {
                 this.Ship.getSource().getSource().clear();
-                data.map((p) => {
+            
+                this.vessel_ = _sortBy(vessels,['client_name', 'vessel_name']);
+                this.vessels = this.vessel_;            
+                this.marx    = this.vessels.map(x => x.vessel_id); 
+                this.vessels.map((p: any) => {
                     p.geometry = new OlPoint([p.lon, p.lat], 'XY');
                     this.Ship.getSource().getSource().addFeature(new OlFeature(p));
                     });
@@ -254,7 +233,7 @@ export class MapsComponent implements OnInit {
         })
         ///////////////////////////////////////////////////////////////////////
         ///////////////////////////////////////////////////////////////////////
-//        this.graticule.setMap(this.map);
+        this.graticule.setMap(this.map);
         
         this.tooltip = document.getElementById('popup');
         this.overlay = new OlOverlay({ element: this.tooltip,
@@ -274,7 +253,7 @@ export class MapsComponent implements OnInit {
             // Deselecting
             if ( evt.deselected[0] ) {
                 const sel = evt.deselected[0].getProperties();
-
+                this.selected = undefined;
                 this.overlay.setPosition(undefined);
             }
 
@@ -286,20 +265,8 @@ export class MapsComponent implements OnInit {
                     return;
                 }
 
-                const sel = fts[0].getProperties();
-                
+                this.selected = fts[0].getProperties();
                 this.overlay.setPosition(coord);
-
-                const pos: string = this.latlon.transform(geo);
-                const tag1: string = this.datepipe.transform(sel.tstamp,'dd/MMM HH:mm');
-                const tag2: string = moment(sel.tstamp).fromNow();
-                
-                this.tooltip.innerHTML = 
-                    `<span class="popup-link">${sel.vessel_name} (${sel.esn})</span><br/>
-                    <span class="popup-pos">${pos}</span><br/>
-                    <span class="popup-pos">Vel.: ${sel.vel || 'N/A'}${sel.vel ? ' kn' : ''}
-                                            Proa: ${sel.dir || '---'}${sel.dir ? '&deg;': ''}</span><br/>
-                    <small class="popup-tstamp">${tag2} em ${tag1}</small>` ;
             }
         }
                 
@@ -482,7 +449,7 @@ export class MapsComponent implements OnInit {
     
     /////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////
-    public markers (evt, v: Vessel) {
+    public markers (evt, v: Scape) {
         if ( evt.checked ) {
             this.marx.push(v.vessel_id);
         } else {
@@ -491,12 +458,12 @@ export class MapsComponent implements OnInit {
         this.redraw(this.Ship);
     }
     
-    public tracks(evt, v: Vessel) {
+    public tracks(evt, v: Scape) {
         const id = v.vessel_id;
         let obs: Observable<FeatureCache>;
 
         if ( this.trax[id] === undefined ) {
-            obs = this.voy.getTrack(v.vessel_id)
+            obs = this.api.getTrack(v.vessel_id)
                     .pipe ( map((data) => {
                         const coords = data.map(p => [p[1], p[2]]);
                         const tag = data.map(p => new OlFeature({
@@ -538,7 +505,7 @@ export class MapsComponent implements OnInit {
         let obs: Observable<OlFeature>;
 
         if ( this.geos[id] === undefined ) {
-            obs = this.voy.getZone(id).pipe ( map(z => new OlFormatGeoJSON().readFeature(z)) );
+            obs = this.api.getArea(id).pipe ( map(z => new OlFormatGeoJSON().readFeature(z)) );
         } else {
             obs = of(this.geos[id])
         }
@@ -556,7 +523,7 @@ export class MapsComponent implements OnInit {
     
     /////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////
-    public marked(v: Vessel) : boolean {
+    public marked(v: Scape) : boolean {
         return this.marx.includes(v.vessel_id);
     }
     /////////////////////////////////////////////////////////////////////////////////////

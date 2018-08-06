@@ -78,30 +78,26 @@ import { LoginComponent,
 
 import { AppRoutingModule      } from './app-routing.module';
 import { AppComponent          } from './app.component';
-import { LatLonPipe            } from './pipes/lat-lon.pipe';
+import { LatLonPipe, HeadToPipe} from './pipes/lat-lon.pipe';
 import { MapsComponent, 
          MapDialog             } from './maps/maps.component';
 
 import { ConfirmDialog         } from './dialogs/confirm.dialog';
 
-import { ClientComponent       } from './config/client/client.component';
+import { VoyageEditComponent   } from './voyages/voyages.component';
 import { VesselListComponent,
-         VesselEditComponent   } from './config/vessel/vessel.component';
+         VesselEditComponent   } from './vessel/vessel.component';
 import { PeopleListComponent,
-         PeopleEditComponent   } from './config/people/people.component';
-import { VoyageListComponent,
-         VoyageEditComponent   } from './voyages/voyages.component';
-
+         PeopleEditComponent   } from './people/people.component';
 import { UserListComponent,
-         UserEditComponent     } from './admin/users/user.component';
+         UserEditComponent     } from './users/user.component';
 import { ClientListComponent,
-         ClientEditComponent   } from './admin/clients/client.component';
+         ClientEditComponent   } from './clients/client.component';
 
 
 @NgModule({
   declarations: [
     AppComponent,
-    ClientComponent,
     LoginComponent,
     DeniedComponent,  
     PendingComponent,
@@ -110,11 +106,11 @@ import { ClientListComponent,
     PeopleEditComponent,
     VesselListComponent,
     VesselEditComponent,
-    VoyageListComponent,
     VoyageEditComponent,
     MapsComponent,
     MapDialog,
     LatLonPipe,
+    HeadToPipe,
     AuthDirective,
     ConfirmDialog,
     UserListComponent,
@@ -185,6 +181,7 @@ import { ClientListComponent,
       AuthGuard,
       MapDialog,
       LatLonPipe,
+      HeadToPipe,
       DatePipe,
   ],
   bootstrap: [AppComponent]

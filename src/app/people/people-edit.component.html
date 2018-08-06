@@ -1,156 +1,147 @@
-<div fxLayout="column" fxLayoutAlign="start">
-
-<mat-toolbar fxLayout="row" fxLayoutAlign="space-between center">
+<mat-toolbar #tab fxLayout="row" fxLayoutAlign="start center">
     <mat-spinner [diameter]="20" [strokeWidth]="4" *ngIf="!ready"></mat-spinner>
     
     <ng-container *ngIf="ready">
-        <button mat-icon-button (click)="app.sidenav_close()" *ngIf="opened"><mat-icon>chevron_left</mat-icon></button>
-        <button mat-icon-button (click)="app.sidenav_open()"  *ngIf="!opened"><mat-icon>chevron_right</mat-icon></button>
-        <a mat-icon-button [routerLink]="['../']"><mat-icon>arrow_upward</mat-icon></a>
-        <button mat-icon-button (click)="print()"><mat-icon>print</mat-icon></button>
-
-        <span fxFlex></span>
-
-        <div *ngIf="form.disabled">
-            <ng-container *nyxAuth="'delete:crew'">
-            <button *ngIf="!fresh"
-                    mat-icon-button 
-                    (click)="del()">
-                <mat-icon>delete_forever</mat-icon>
-            </button>
-            </ng-container>
-            <ng-container *nyxAuth="'edit:crew'">
-            <button mat-icon-button 
-                    (click)="form.enable()">
-                <mat-icon>edit</mat-icon>
-            </button>
-            </ng-container>
-        </div>
-        <div *ngIf="form.enabled">
-            <button mat-icon-button 
-                    [disabled]="form.pristine && form.valid"
-                    (click)="save()">
-                <mat-icon>save</mat-icon>
-            </button>
-            <button mat-icon-button 
-                    (click)="drop()">
-                <mat-icon>highlight_off</mat-icon>
+        <div fxFlex="25%" fxLayout="row" fxLayoutAlign="start">
+            <a mat-icon-button [routerLink]="['../']">
+                <mat-icon>chevron_left</mat-icon>
+            </a>
+            <button mat-icon-button (click)="print()">
+                <mat-icon>print</mat-icon>
             </button>
         </div>
+        <span fxFlex="50%" class="text-center">{{person.person_name}}</span>
+        <ng-container [ngSwitch]="tab.page">
+            <!-- Social -->
+            <span *ngSwitchCase="1" fxFlex fxLayoutAlign="end"></span>
+
+            <!-- Identidade -->
+            <span *ngSwitchDefault fxFlex fxLayoutAlign="end">
+                <ng-container *ngIf="form.disabled">
+                    <ng-container *ngIf="!fresh" >
+                    <button mat-icon-button *nyxAuth="'delete:crew'"
+                            (click)="del()">
+                        <mat-icon>delete_forever</mat-icon>
+                    </button>
+                    </ng-container>
+                    <button mat-icon-button *nyxAuth="'edit:crew'"
+                            (click)="form.enable()">
+                        <mat-icon>edit</mat-icon>
+                    </button>
+                </ng-container>
+                <ng-container *ngIf="form.enabled">
+                    <button mat-icon-button 
+                            [disabled]="form.pristine && form.valid"
+                            (click)="save()">
+                        <mat-icon>save</mat-icon>
+                    </button>
+                    <button mat-icon-button 
+                            (click)="drop()">
+                        <mat-icon>highlight_off</mat-icon>
+                    </button>
+                </ng-container>
+            </span>
+        </ng-container>
     </ng-container>
 </mat-toolbar>
-
-<form [formGroup]="form">
-<mat-tab-group dynamicHeight="false" *ngIf="ready" [(selectedIndex)]="tab">
+<mat-tab-group *ngIf="ready" [(selectedIndex)]="tab.page">
     <mat-tab label="Identidade">
-        <div style="padding: 1em"></div>
-        <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
-            <mat-form-field floatPlaceholder='always' fxFlex="70%">
-                <input matInput required formControlName="person_name" placeholder="Nome">
-            </mat-form-field>
-            <mat-form-field floatPlaceholder='always' fxFlex="25%">
-                <input matInput placeholder="Data de Nascimento" 
-                       [matDatepicker]="birthday" 
-                       formControlName="birthday">
-                <mat-datepicker-toggle matSuffix [for]="birthday"></mat-datepicker-toggle>
-                <mat-datepicker #birthday></mat-datepicker>
-            </mat-form-field> 
-        </div>
-        
-        <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
-            <mat-form-field floatPlaceholder='always' fxFlex="20%">
-                <input matInput formControlName="rgi_number" placeholder="R.G.I.">
-            </mat-form-field>
+        <form [formGroup]="form" fxFlexFill fxLayout="column">
+            <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
+                <mat-form-field floatPlaceholder='always' fxFlex="55%">
+                    <input matInput required formControlName="person_name" placeholder="Nome">
+                </mat-form-field>
+                <mat-form-field floatPlaceholder='always' fxFlex="20%">
+                    <input matInput formControlName="cpf" placeholder="C.P.F.">
+                </mat-form-field>
+                <mat-form-field floatPlaceholder='always' fxFlex="20%">
+                    <input matInput placeholder="Data de Nascimento" 
+                           [matDatepicker]="birthday" 
+                           formControlName="birthday">
+                    <mat-datepicker-toggle matSuffix [for]="birthday"></mat-datepicker-toggle>
+                    <mat-datepicker #birthday></mat-datepicker>
+                </mat-form-field> 
+            </div>
 
-            <mat-form-field floatPlaceholder='always' fxFlex="20%">
-                <input matInput formControlName="rgi_issuer" placeholder="emissor">
-            </mat-form-field>
+            <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
+                <mat-form-field floatPlaceholder='always' fxFlex="25%">
+                    <input matInput formControlName="rgi_number" placeholder="R.G.I.">
+                </mat-form-field>
 
-            <mat-form-field floatPlaceholder='always' fxFlex="25%">
-                <input matInput placeholder="em" 
-                       [matDatepicker]="rgi_issued" 
-                       formControlName="rgi_issued">
-                <mat-datepicker-toggle matSuffix [for]="rgi_issued"></mat-datepicker-toggle>
-                <mat-datepicker #rgi_issued></mat-datepicker>
-            </mat-form-field> 
+                <mat-form-field floatPlaceholder='always' fxFlex="25%">
+                    <input matInput formControlName="rgi_issuer" placeholder="emissor">
+                </mat-form-field>
 
-            <mat-form-field floatPlaceholder='always' fxFlex="25%">
-                <input matInput placeholder="até" 
-                       [matDatepicker]="rgi_expire" 
-                       formControlName="rgi_expire">
-                <mat-datepicker-toggle matSuffix [for]="rgi_expire"></mat-datepicker-toggle>
-                <mat-datepicker #rgi_expire></mat-datepicker>
-            </mat-form-field> 
-        </div>
-        
-        <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
-            <mat-form-field floatPlaceholder='always' fxFlex="45%">
-                <input matInput formControlName="ric_number" placeholder="R.I.C.">
-            </mat-form-field>
+                <mat-form-field floatPlaceholder='always' fxFlex="20%">
+                    <input matInput placeholder="Emitido em" 
+                           [matDatepicker]="rgi_issued" 
+                           formControlName="rgi_issued">
+                    <mat-datepicker-toggle matSuffix [for]="rgi_issued"></mat-datepicker-toggle>
+                    <mat-datepicker #rgi_issued></mat-datepicker>
+                </mat-form-field> 
 
-            <mat-form-field floatPlaceholder='always' fxFlex="25%">
-                <input matInput placeholder="em" 
-                       [matDatepicker]="ric_issued" 
-                       formControlName="ric_issued">
-                <mat-datepicker-toggle matSuffix [for]="ric_issued"></mat-datepicker-toggle>
-                <mat-datepicker #ric_issued></mat-datepicker>
-            </mat-form-field> 
+                <mat-form-field floatPlaceholder='always' fxFlex="20%">
+                    <input matInput placeholder="Valido até" 
+                           [matDatepicker]="rgi_expire" 
+                           formControlName="rgi_expire">
+                    <mat-datepicker-toggle matSuffix [for]="rgi_expire"></mat-datepicker-toggle>
+                    <mat-datepicker #rgi_expire></mat-datepicker>
+                </mat-form-field> 
+            </div>
 
-            <mat-form-field floatPlaceholder='always' fxFlex="25%">
-                <input matInput placeholder="até" 
-                       [matDatepicker]="ric_expire" 
-                       formControlName="ric_expire">
-                <mat-datepicker-toggle matSuffix [for]="ric_expire"></mat-datepicker-toggle>
-                <mat-datepicker #ric_expire></mat-datepicker>
-            </mat-form-field> 
-        </div>
+            <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
+                <mat-form-field floatPlaceholder='always' fxFlex="25%">
+                    <input matInput formControlName="ric_number" placeholder="R.I.C.">
+                </mat-form-field>
+                <mat-form-field floatPlaceholder='always' fxFlex="25%">
+                    <input matInput formControlName="pis" placeholder="P.I.S.">
+                </mat-form-field>
+                <mat-form-field floatPlaceholder='always' fxFlex="20%">
+                    <input matInput placeholder="Emitido em" 
+                           [matDatepicker]="ric_issued" 
+                           formControlName="ric_issued">
+                    <mat-datepicker-toggle matSuffix [for]="ric_issued"></mat-datepicker-toggle>
+                    <mat-datepicker #ric_issued></mat-datepicker>
+                </mat-form-field> 
 
-        <div fxFlex fxLayout="row" fxLayoutAlign="space-between center">
-            <mat-form-field floatPlaceholder='always' fxFlex="35%">
-                <input matInput formControlName="cpf" placeholder="C.P.F.">
-            </mat-form-field>
-            <mat-form-field floatPlaceholder='always' fxFlex="35%">
-                <input matInput formControlName="pis" placeholder="P.I.S.">
-            </mat-form-field>
-            <mat-checkbox fxFlex="25%" formControlName="master">Mestre</mat-checkbox>
-        </div>
+                <mat-form-field floatPlaceholder='always' fxFlex="20%">
+                    <input matInput placeholder="Valido até" 
+                           [matDatepicker]="ric_expire" 
+                           formControlName="ric_expire">
+                    <mat-datepicker-toggle matSuffix [for]="ric_expire"></mat-datepicker-toggle>
+                    <mat-datepicker #ric_expire></mat-datepicker>
+                </mat-form-field> 
+            </div>
+
+
+            <div fxFlex fxLayout="row" fxLayoutAlign="space-between center">
+                <mat-form-field floatPlaceholder='always' fxFlex="25%">
+                    <input matInput formControlName="rgp_number" placeholder="R.G.P.">
+                </mat-form-field>
+<!--
+                <mat-form-field floatPlaceholder='always' fxFlex="20%">
+                    <input matInput formControlName="rgp_permit" placeholder="Categoria">
+                </mat-form-field>
+-->
+                <mat-checkbox fxFlex="25%" formControlName="master">Mestre</mat-checkbox>
+                <mat-form-field floatPlaceholder='always' fxFlex="20%">
+                    <input matInput placeholder="Emitido em" 
+                           [matDatepicker]="rgp_issued" 
+                           formControlName="rgp_issued">
+                    <mat-datepicker-toggle matSuffix [for]="rgp_issued"></mat-datepicker-toggle>
+                    <mat-datepicker #rgp_issued></mat-datepicker>
+                </mat-form-field> 
+                <mat-form-field floatPlaceholder='always' fxFlex="20%">
+                    <input matInput placeholder="Válido até" 
+                           [matDatepicker]="rgp_expire" 
+                           formControlName="rgp_expire">
+                    <mat-datepicker-toggle matSuffix [for]="rgp_expire"></mat-datepicker-toggle>
+                    <mat-datepicker #rgp_expire></mat-datepicker>
+                </mat-form-field> 
+            </div>
+        </form>
     </mat-tab>
-
-    <mat-tab label="R. G. P.">
-        <div style="padding: 1em"></div>
-
-        <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
-            <mat-form-field floatPlaceholder='always' fxFlex="60%">
-                <input matInput formControlName="rgp_number" placeholder="R.G.P.">
-            </mat-form-field>
-
-            <mat-form-field floatPlaceholder='always' fxFlex="30%">
-                <input matInput formControlName="rgp_permit" placeholder="Categoria">
-            </mat-form-field>
-        </div>
-        <div fxFlex fxLayout="row" fxLayoutAlign="space-around">
-            <mat-form-field floatPlaceholder='always' fxFlex="45%">
-                <input matInput placeholder="Emitido em" 
-                       [matDatepicker]="rgp_issued" 
-                       formControlName="rgp_issued">
-                <mat-datepicker-toggle matSuffix [for]="rgp_issued"></mat-datepicker-toggle>
-                <mat-datepicker #rgp_issued></mat-datepicker>
-            </mat-form-field> 
-        
-        
-            <mat-form-field floatPlaceholder='always' fxFlex="45%">
-                <input matInput placeholder="Válido Até" 
-                       [matDatepicker]="rgp_expire" 
-                       formControlName="rgp_expire">
-                <mat-datepicker-toggle matSuffix [for]="rgp_expire"></mat-datepicker-toggle>
-                <mat-datepicker #rgp_expire></mat-datepicker>
-            </mat-form-field> 
-        </div>
-    </mat-tab>
-
     <mat-tab label="Social">
         <div style="padding: 1em"></div>        
     </mat-tab>
 </mat-tab-group>
-</form>
-</div>

@@ -12,15 +12,12 @@ import { MatDialog,
          MatSort,
          MAT_DIALOG_DATA }  from '@angular/material';
 
-import { Observable,of } from "rxjs";
-import { filter, pairwise } from "rxjs/operators";
+import { Observable, of } from "rxjs";
 
-import { ConfigService } from '../config.service';
-import { ConfirmDialog } from '../../dialogs/confirm.dialog';
-import { AuthService   } from '../../auth/auth.service';
-import { AppService    } from '../../app.service';
-import { VoyageService } from '../../voyages/voyages.service';
-import { Vessel, Client, Area } from '../../app.interfaces';
+import { ApiService } from '../api.service';
+import { ConfirmDialog } from '../dialogs/confirm.dialog';
+import { Vessel, Voyage, 
+         Client, Area  } from '../app.interfaces';
 
 import _omit from "lodash-es/omit";
 import _sortBy      from "lodash-es/sortBy";
@@ -35,37 +32,34 @@ import _sortBy      from "lodash-es/sortBy";
 export class VesselListComponent implements OnInit {
     @ViewChild(MatSort) sort: MatSort;
     
-    clients: Client[];
-    devices: MatTableDataSource<any>;
-    cols: string[] = ['client_name', 'esn', 'vessel_name', 
-                      'status', 'position', 'lastseen'];
-    
     bShow: boolean = false;
     client_id: number;
+    clients: Client[];
     
-    constructor( private    app:    AppService,
-                 private    voy: VoyageService,
-                 private config: ConfigService) { 
-        this.app.title = 'Frota Ativa';      
-    }
+    vessels: MatTableDataSource<any>;
+    vessels_cols: string[] = ['client_name', 'esn', 'vessel_name', 
+                      'status', 'position', 'lastseen'];
+    
+    constructor(private api: ApiService) { }
 
     ngOnInit() {
-        this.voy.seascape
+        this.api.seascape
             .subscribe (data => {
-                this.devices = new MatTableDataSource<any>(data);
-                this.devices.filterPredicate = (data, filter) : boolean => {
+                this.vessels = new MatTableDataSource<any>(data);
+                this.vessels.filterPredicate = (data, filter) : boolean => {
                     return (this.bShow || (data.miss || data.lost)) &&
                     ((this.client_id == null) || (this.client_id == data.client_id));        
                 }
-                this.devices.filter = 'start';
+                this.vessels.filter = 'start';
+                this.vessels.sort = this.sort;
         });
     
-        this.config.clients
+        this.api.clients
             .subscribe ( (data) => this.clients = _sortBy(data, 'client_name') );
     }
     
-    
-    
+    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
     public style(v) {
         if ( v.lost ) {
             return 'lost'; 
@@ -86,15 +80,16 @@ export class VesselListComponent implements OnInit {
         }
     }  
     
-    
+    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
     public filterStatus(evt) {
         this.bShow = evt.checked;
-        this.devices.filter = 'status';
+        this.vessels.filter = 'status';
     }
     
     public filterClient(evt) {
         this.client_id = evt.value;
-        this.devices.filter = 'client';
+        this.vessels.filter = 'client';
     }
 }
 
@@ -106,14 +101,16 @@ export class VesselListComponent implements OnInit {
     styleUrls: ['./vessel.component.css']
 })
 export class VesselEditComponent implements OnInit {
-    id:     number;
-    opened: boolean;
     ready:  boolean = false;
     form:   FormGroup;
-    vessel: Vessel;
 
     clients: Client[];
-    ports: Area[];
+    vessel:  Vessel;
+    ports:   Area[];
+
+    voyages: MatTableDataSource<Voyage>;
+    voyage_cols: string[] = ['voyage_id', 'ftype', 'target', 
+                            'master', 'atd', 'ata', 'desc', 'status'];
     
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
@@ -121,20 +118,17 @@ export class VesselEditComponent implements OnInit {
                 private router: Router,
                 private dialog: MatDialog,
                 private fb:     FormBuilder,
-                private app:    AppService,
-                private config: ConfigService) { }
-
+                private api:    ApiService) { }
+    
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     ngOnInit() {
-        this.config.clientId
-            .subscribe((id) => {
-                this.id = id;
-            
+        this.api.clientId
+            .subscribe((id) => {            
                 // Create Form Group
                 this.form = this.fb.group({
                       port_id:      '',
-                    client_id:      this.id,
+                    client_id:      id,
                     vessel_id:      '',
                     vessel_name:   ['', Validators.required],
                     esn:           ['', Validators.required],
@@ -150,17 +144,20 @@ export class VesselEditComponent implements OnInit {
                 });
             });
 
-        this.config.clients.subscribe(c => this.clients = c);
-        this.config.areas.subscribe  (p => this.ports   = p);
+        this.api.clients.subscribe(c => this.clients = c);
+        this.api.areas.subscribe  (p => this.ports   = p);
         
-        this.route.params.subscribe( addr => {
+        this.route.params.subscribe(addr => {
             this.ready = false;
-            this.config.getVessel(addr.vessel_id)
+            this.api.getVessel(addr.vessel_id)
                 .subscribe( (data) => {
                     this.ready  = true;
                     this.vessel = data;
                     this.form.reset(this.vessel);
                     this.form.disable();
+                
+                    const voys = _sortBy (data.voyages, ['ata', 'atd']);
+                    this.voyages = new MatTableDataSource<any>(voys.reverse());
             });
         });
     }
@@ -173,6 +170,7 @@ export class VesselEditComponent implements OnInit {
         this.form.controls['esn'].disable();
         this.form.controls['vessel_name'].disable();
     }
+    
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     drop() {
@@ -185,7 +183,7 @@ export class VesselEditComponent implements OnInit {
     save() {
         const id = this.vessel.vessel_id;
         const load = _omit(this.form.value, ['vessel_id', 'vessel_name', 'esn']);
-        this.config.putVessel(id, load)
+        this.api.putVessel(id, load)
             .subscribe((data) => { 
                 this.vessel = this.form.value;
                 this.form.reset(this.vessel);
@@ -198,10 +196,10 @@ export class VesselEditComponent implements OnInit {
     perms(evt) {
         const v = evt.option.value;
         if ( evt.option.selected ) {
-            this.config.setVesselPerm(v.vessel_id, v.fishingtype_id)
+            this.api.setVesselPerm(v.vessel_id, v.fishingtype_id)
                 .subscribe();
         } else {
-            this.config.delVesselPerm(v.vessel_id, v.fishingtype_id)
+            this.api.delVesselPerm(v.vessel_id, v.fishingtype_id)
                 .subscribe();
         }
     }
@@ -211,10 +209,10 @@ export class VesselEditComponent implements OnInit {
     checks(evt) {
         const v = evt.option.value;
         if ( evt.option.selected ) {
-            this.config.setVesselCheck(v.vessel_id, v.check_id)
+            this.api.setVesselCheck(v.vessel_id, v.check_id)
                 .subscribe();
         } else {
-            this.config.delVesselCheck(v.vessel_id, v.check_id)
+            this.api.delVesselCheck(v.vessel_id, v.check_id)
                 .subscribe();
         }
     }
@@ -223,5 +221,31 @@ export class VesselEditComponent implements OnInit {
     ///////////////////////////////////////////////////////////////////
     print() {
         alert('Enviando Documentação da Embarcação '+this.vessel.vessel_name);
+    }
+    
+    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
+    style(v) {
+        if ( v.ata ) {
+            return 'past'; 
+        } else if ( v.atd ) {
+            return 'open'; 
+        } else {
+            return 'prog';
+        }
+    }  
+    
+    status(v) {
+        if ( v.ata ) {
+            return 'Encerrada'; 
+        } else if ( v.atd ) {
+            return 'Pescando'; 
+        } else {
+            return 'Programada';
+        }
+    }     
+    
+    change(evt) {
+        console.log(evt);
     }
 }

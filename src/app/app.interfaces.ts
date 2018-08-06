@@ -1,21 +1,15 @@
-export interface Seascape {
-    esn:                string;
-    client_id:          number;
-    vessel_id:          number;
-    vessel_name:        string;
-    messagetype:        string;
-    messagedetail:      string;
-    tstamp:             Date;
-    lat:                number;
-    lon:                number;   
-};
-
-
 export interface Client {
     client_id:          number;
-	client_name:        string; 
-	address_id:         number; 
-	cnpj:               string; 
+	client_name:        string;
+
+    address_id?:        number; 
+	cnpj?:              string; 
+ 
+    status?:            Status;
+    users?:             User[];
+    voyages?:           Voyage[];
+    staff?:             Person[];
+    devices?:           Vessel[];
 };
 
 
@@ -64,13 +58,23 @@ export interface Vessel {
     created_at?:         Date;
 };
 
+export interface Scape {
+    client_id:           number;
+    client_name?:        string;
+    vessel_id?:          number;
+    vessel_name?:        string;
+    esn?:                string;
+    lat?:                number;
+    lon?:                number;
+    sog?:                number;
+    head?:               number;
+    lastseen?:           Date;
+}
+
 
 export interface Voyage {
-    client_id?:          number;
     voyage_id?:          number;
     voyage_desc?:        string;
-    eta?:                Date;
-    etd?:                Date;
     ata?:                Date;
     atd?:                Date;
     vessel_id?:          number;
@@ -105,7 +109,7 @@ export interface Lance {
 export interface Crew {
     voyage_id?:         number;
     person_id?:         number;
-    editing?:           boolean; 
+//    editing?:           boolean; 
 };
 
 
@@ -144,8 +148,35 @@ export interface Address {
     estado:             string;     
 };
 
+
 export interface Area {
     geometry_id:        number;
     geometry_name:      string;
     
-}
+};
+
+
+export interface User {
+    client_id:          number;
+    user_id:            number;
+    name:               string;
+    nickname:           string;
+    picture:            string;
+    email:              string;
+    email_verified:     boolean;
+    created_at:         Date;
+    updated_at:         Date;
+    last_login:         Date;
+    last_ip:            string;
+    app_metadata?:      any;
+    user_metadata?:     any;
+};
+
+
+export interface Status { 
+    fleet:      number;
+    dock:       number;
+    miss:       number;
+    lost:       number;
+    sail:       number;
+};
