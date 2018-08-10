@@ -26,7 +26,6 @@ import { environment as env }  from '../environments/environment';
 export class ApiService {
     private blacklist : string[] = ['crew','lances', 'ftype', 'master', 'vessel'];
 
-    
     private qs: string;
     private client_id: string;
     
@@ -191,6 +190,15 @@ export class ApiService {
     }
 
     ///////////////////////////////////////////////////////////////////
+    setWantsWith(c: number, p: number) : Observable<any> {
+        return this.http.post (env.baseURL+`/clients/${c}/workswith/${p}`, {});
+    }
+
+    delWantsWith(c: number, p: number) : Observable<any> {
+        return this.http.delete (env.baseURL+`/clients/${c}/workswith/${p}`);
+    }
+
+    ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     get fleethealth() : Observable<any> {
@@ -201,8 +209,20 @@ export class ApiService {
         return this.SeaScape$.asObservable();
     }
         
-    getTrack(id) : Observable<any> {
-        return this.http.get<any[]>(env.baseURL+`/sea/track/${id}`);
+    getTrack(id, min, max) : Observable<any> {
+        let qs: string = '';
+        if ( !!min && !!max ) {
+            qs = `?t0=${min}&t1=${max}`;
+        } else {
+            if ( !!min ) {
+                qs = `?t0=${min}`;
+            }
+            
+            if ( !!max ) {
+                qs = `?t1=${max}`;
+            }
+        }
+        return this.http.get<any[]>(env.baseURL+`/sea/track/${id}${qs}`);
     }
 
     getVessel(id) : Observable<any> {
@@ -239,26 +259,35 @@ export class ApiService {
     }
         
     updatePeople() {
-        this.http.get<Person[]> (env.baseURL+`/models/people`)
+        this.http.get<Person[]> (env.baseURL+`/people`)
                 .subscribe(data => this.People$.next(data));  
     }
 
     getPerson(id) : Observable<Person> {
-        return this.http.get<Person> (env.baseURL+`/models/people/${id}`);
+        return this.http.get<Person> (env.baseURL+`/people/${id}`);
     }
     
     delPerson(id) : Observable<Person> {
-        return this.http.delete<Person> (env.baseURL+`/models/people/${id}`);
+        return this.http.delete<Person> (env.baseURL+`/people/${id}`);
     }
     
     putPerson(id,load) : Observable<Person> {
-        return this.http.put<Person> (env.baseURL+`/models/people/${id}`, load);
+        return this.http.put<Person> (env.baseURL+`/people/${id}`, load);
     }
     
     postPerson(load) : Observable<Person> {
-        return this.http.post<Person> (env.baseURL+`/models/people/`, load);
+        return this.http.post<Person> (env.baseURL+`/people/`, load);
     }
         
+    ///////////////////////////////////////////////////////////////////
+    setWorksWith(p: number, c: number) : Observable<any> {
+        return this.http.post (env.baseURL+`/people/${p}/workswith/${c}`, {});
+    }
+
+    delWorksWith(p: number, c: number) : Observable<any> {
+        return this.http.delete (env.baseURL+`/people/${p}/workswith/${c}`);
+    }
+
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////    
     getVoyage(id: number) : Observable<Voyage> {

@@ -96,8 +96,8 @@ export class ClientListComponent implements OnInit {
 })
 export class ClientEditComponent implements OnInit {
     @ViewChild(MatSort) devices_sort: MatSort;
-    @ViewChild(MatSort)   staff_sort: MatSort;
     @ViewChild(MatSort)   users_sort: MatSort;
+//    @ViewChild(MatSort)   staff_sort: MatSort;
 
     id:     number;
     fresh:  boolean = false;
@@ -113,8 +113,8 @@ export class ClientEditComponent implements OnInit {
     devices: MatTableDataSource<any>;
     devices_cols: string[] = ['esn', 'vessel_name', 'status', 'since'];
     
-    staff: MatTableDataSource<Person>;
-    staff_cols: string[] = ['picture', 'person_name', 'birthday'];
+//    staff: MatTableDataSource<Person>;
+//    staff_cols: string[] = ['picture', 'person_name', 'birthday'];
 
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
@@ -159,8 +159,8 @@ export class ClientEditComponent implements OnInit {
                             this.devices = new MatTableDataSource<Vessel>(client.devices);
                             this.devices.sort = this.devices_sort;
                         
-                            this.staff = new MatTableDataSource<Person>(client.staff);
-                            this.staff.sort = this.staff_sort; 
+//                            this.staff = new MatTableDataSource<Person>(client.staff);
+//                            this.staff.sort = this.staff_sort; 
                         
                             this.ready  = true;
                             this.client = client;
@@ -168,9 +168,6 @@ export class ClientEditComponent implements OnInit {
                             this.fresh = (this.client.client_id == undefined);
                             this.fresh ? this.form.enable() : 
                                          this.form.disable();
-                        
-                        
-                        
                         });
                 });
         });
@@ -235,6 +232,18 @@ export class ClientEditComponent implements OnInit {
     }
     
     ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
+    like(p: any) {
+        this.api.setWantsWith(this.client.client_id, p.person_id)
+            .subscribe(() => p.wants);
+    }
+    
+    unlike(p: any) {
+        this.api.delWantsWith(this.client.client_id, p.person_id)
+            .subscribe(() => p.wants);
+    }    
+    
+     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     print() {  
     }

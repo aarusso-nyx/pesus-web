@@ -31,11 +31,12 @@ const routes: Routes = [
         data: { roles: ['read:crew', 'edit:crew', 'create:crew', 'delete:crew'] },
         component: PeopleListComponent,
         canActivate: [AuthGuard],
-        children: [{
-            data: { roles: ['read:crew', 'edit:crew', 'create:crew', 'delete:crew'] },
-            path: ':person_id',
-            component: PeopleEditComponent
-        }]
+    },
+    {
+        path: 'staff/:person_id',
+        data: { roles: ['read:crew', 'edit:crew', 'create:crew', 'delete:crew'] },
+        component: PeopleEditComponent,
+        canActivate: [AuthGuard],
     },
     {
         path: 'vessels',

@@ -184,10 +184,18 @@ export class VesselEditComponent implements OnInit {
         const id = this.vessel.vessel_id;
         const load = _omit(this.form.value, ['vessel_id', 'vessel_name', 'esn']);
         this.api.putVessel(id, load)
-            .subscribe((data) => { 
-                this.vessel = this.form.value;
-                this.form.reset(this.vessel);
-                this.form.disable();
+            .subscribe(() => { 
+                this.ready = false;
+                 this.api.getVessel(id)
+                    .subscribe( (data) => {
+                        this.ready  = true;
+                        this.vessel = data;
+                        this.form.reset(this.vessel);
+                        this.form.disable();
+
+                        const voys = _sortBy (data.voyages, ['ata', 'atd']);
+                        this.voyages = new MatTableDataSource<any>(voys.reverse());
+                });
             });
     }    
     

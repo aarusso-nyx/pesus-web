@@ -1,6 +1,7 @@
 <mat-toolbar fxLayout="row" fxLayoutAlign="space-between center">
-    <mat-form-field fxFlex="20%" fxFlexOffset="5%" [floatLabel]="'never'" *nyxAuth="'map:all'">
-        <mat-select placeholder="Clientes" (selectionChange)="filterClient($event)">
+    <mat-form-field fxFlex="20%" fxFlexOffset="5%" [floatLabel]="'never'">
+        <mat-select placeholder="Clientes"  *nyxAuth="'map:all'"
+                    (selectionChange)="filterClient($event)" >
             <mat-option>Todos</mat-option>
             <mat-option name="clients" *ngFor="let c of clients" [value]="c.client_id">
             {{ c.client_name }}

@@ -157,6 +157,7 @@ export class PeopleEditComponent implements OnInit {
                     this.api.delPerson(this.person.person_id)
                         .subscribe(() => {
                             this.router.navigate(['../'], { relativeTo: this.route });
+                            this.api.updatePeople();
                     });
                 }
             });
@@ -189,6 +190,17 @@ export class PeopleEditComponent implements OnInit {
         }
     }    
 
+    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
+    like(c: any) {
+        this.api.setWorksWith(this.person.person_id, c.client_id)
+            .subscribe(() => c.works);
+    }
+    
+    unlike(c: any) {
+        this.api.delWorksWith(this.person.person_id, c.client_id)
+            .subscribe(() => c.works);
+    }
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     print() {

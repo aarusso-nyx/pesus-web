@@ -35,6 +35,7 @@ import _pick   from "lodash-es/pick";
 })
 export class VoyageEditComponent implements OnInit {    
     voyage:   Voyage;
+    vessel:   Vessel;
     
     allfish:  Fish[];
     fishes:   Fish[];
@@ -45,7 +46,6 @@ export class VoyageEditComponent implements OnInit {
     people:   Person[];
     
     id:       number;
-    vessel_name:     string;
     fresh:    boolean = true;
     ready:    boolean = false;
     
@@ -68,9 +68,6 @@ export class VoyageEditComponent implements OnInit {
     ngOnInit() {
         this.api.fishes
             .subscribe ( (data) => this.allfish = data );
-        
-        this.api.fishingtypes
-            .subscribe ( (data) => this.ftypes = data );
 
         this.api.winds
             .subscribe ( (data) => this.winds = data );
@@ -84,11 +81,14 @@ export class VoyageEditComponent implements OnInit {
                 this.masters = this.people.filter(i => !!i.master);
             });
         
-        this.api.seascape.subscribe(vessels => {            
-            this.route.params.subscribe(addr => {
+    // chamando getvessel 4x    
+        this.route.params.subscribe(addr => {
+            this.api.getVessel(addr.vessel_id).subscribe(vessel => {            
+                this.vessel = vessel;
+                this.ftypes = vessel.perms.filter (p => p.value);
+                
                 this.form = this.fb.group({
-                    vessel_id:      ['', Validators.required],
-                    voyage_id:       '',
+                    vessel_id:       addr.vessel_id,
                     voyage_desc:     '',
                     ata:             '',
                     atd:             '',
@@ -97,12 +97,11 @@ export class VoyageEditComponent implements OnInit {
                     target_fish_id: ['', Validators.required],
                 });
                 
-                const v = vessels.find(v => v.vessel_id == addr.vessel_id);
-                this.vessel_name = v && v.vessel_name;
-                
                 let obs: Observable<Voyage>;
                 if ( addr.voyage_id === 'new') {
-                    obs = of({ vessel_id: addr.vessel_id, crew:[], lances:[] });
+                    obs = of({ vessel_id: addr.vessel_id, 
+                               voyage_id: null, 
+                               crew:[], lances:[] });
                 } else {
                     obs = this.api.getVoyage(addr.voyage_id);
                 }
@@ -165,12 +164,12 @@ export class VoyageEditComponent implements OnInit {
     }
     
     drop() {
-        if ( this.fresh ) {
-            this.router.navigate(['../../'], { relativeTo: this.route });
-        } else {
+//        if ( this.fresh ) {
+//            this.router.navigate(['../../'], { relativeTo: this.route });
+//        } else {
             this.form.reset(this.voyage);
             this.form.disable();
-        }
+//        }
     }
 
     ///////////////////////////////////////////////////////////////////
@@ -178,7 +177,7 @@ export class VoyageEditComponent implements OnInit {
     del() {
           this.dialog
             .open(ConfirmDialog, {
-                data: `Remover esta viagem de ${this.vessel_name} permanentemente?`
+                data: `Remover esta viagem de ${this.vessel.vessel_name} permanentemente?`
             })
             .afterClosed().subscribe(result => {
                 if ( result && !this.fresh ) {
@@ -193,18 +192,20 @@ export class VoyageEditComponent implements OnInit {
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     save() {
-        const load = _omit(this.form.value, 'voyage_id');
+//        const load = _omit(this.form.value, 'voyage_id');
+//        const load = _omit(this.form.value, 'voyage_id');
 
         let obs: Observable<Voyage>; 
         if ( this.fresh ) {
-            obs = this.api.postVoyage(load);
+            obs = this.api.postVoyage(this.form.value);
         } else {
-            obs = this.api.putVoyage(this.id, load).pipe ( map(v => this.form.value) );
+            obs = this.api.putVoyage(this.voyage.voyage_id, this.form.value)
+                        .pipe ( map(v => this.form.value) );
         }
                 
         obs.subscribe((data) => { 
             this.voyage = data;
-            if (!this.id) {
+            if ( this.fresh ) {
                 this.router.navigate(['../'+data.voyage_id], { relativeTo: this.route });
             }
             

@@ -77,7 +77,7 @@ import { LoginComponent,
          CallbackComponent     } from './auth/auth.component';
 
 import { AppRoutingModule      } from './app-routing.module';
-import { AppComponent          } from './app.component';
+import { RootComponent         } from './root/root.component';
 import { LatLonPipe, HeadToPipe} from './pipes/lat-lon.pipe';
 import { MapsComponent, 
          MapDialog             } from './maps/maps.component';
@@ -97,7 +97,7 @@ import { ClientListComponent,
 
 @NgModule({
   declarations: [
-    AppComponent,
+    RootComponent,
     LoginComponent,
     DeniedComponent,  
     PendingComponent,
@@ -184,6 +184,6 @@ import { ClientListComponent,
       HeadToPipe,
       DatePipe,
   ],
-  bootstrap: [AppComponent]
+  bootstrap: [RootComponent]
 })
 export class AppModule { }

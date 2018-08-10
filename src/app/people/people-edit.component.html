@@ -115,6 +115,19 @@
 
 
             <div fxFlex fxLayout="row" fxLayoutAlign="space-between center">
+                <mat-form-field floatPlaceholder='always' fxFlex="40%">
+                    <mat-select placeholder="Cliente"
+                                formControlName="client_id">
+                        <mat-option name="clients" *ngFor="let c of clients" [value]="c.client_id">
+                        {{ c.client_name }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
+            
+            
+            
+            <div fxFlex fxLayout="row" fxLayoutAlign="space-between center">
                 <mat-form-field floatPlaceholder='always' fxFlex="25%">
                     <input matInput formControlName="rgp_number" placeholder="R.G.P.">
                 </mat-form-field>
@@ -143,5 +156,13 @@
     </mat-tab>
     <mat-tab label="Social">
         <div style="padding: 1em"></div>        
+    </mat-tab>
+    <mat-tab label="Armadores">
+        <div style="padding: 1em"></div>
+        <div *ngFor="let c of person.works" style="padding-left: 2em">
+            <button mat-icon-button *ngIf="c.works" (click)="unlike(c)"><mat-icon>star</mat-icon></button>
+            <button mat-icon-button *ngIf="!c.works" (click)="like(c)"><mat-icon>star_border</mat-icon></button>
+            <span>{{c.client_name}}</span>
+        </div>
     </mat-tab>
 </mat-tab-group>

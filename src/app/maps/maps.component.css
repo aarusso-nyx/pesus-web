@@ -30,7 +30,10 @@
     margin: 14px;
 }
 
-
+.vessel-actions {
+    padding-top: 1.5em;
+    padding-bottom: 1.0em;
+}
 
 .vessel-client {
     font-size: 12px !important;

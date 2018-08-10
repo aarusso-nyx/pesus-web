@@ -69,10 +69,10 @@
             
             <dt>Situação:</dt>
             <dd>
-                <span *ngIf="vessel.status.lost" class="lost">Perdido</span>
-                <span *ngIf="vessel.status.miss" class="miss">Atrasado</span>
-                <span *ngIf="vessel.status.dock" class="dock">Atracado</span>
-                <span *ngIf="vessel.status.sail" class="sail">Navegando</span>
+                <span *ngIf="vessel?.status.lost" class="lost">Perdido</span>
+                <span *ngIf="vessel?.status.miss" class="miss">Atrasado</span>
+                <span *ngIf="vessel?.status.dock" class="dock">Atracado</span>
+                <span *ngIf="vessel?.status.sail" class="sail">Navegando</span>
             </dd>
             
             <dt>Armador:</dt>
@@ -197,8 +197,8 @@
                 <mat-form-field floatPlaceholder='always' fxFlex="40%">
                     <mat-select placeholder="Porto de Origem"
                                 formControlName="port_id">
-                        <mat-option name="ports" *ngFor="let p of ports" [value]="p.port_id">
-                        {{ p.port_name }}
+                        <mat-option name="ports" *ngFor="let p of ports" [value]="p.geometry_id">
+                        {{ p.geometry_name }}
                         </mat-option>
                     </mat-select>
                 </mat-form-field>

@@ -46,6 +46,7 @@ import OlInteraction    from 'ol/interaction/Interaction';
 import OlSelect         from 'ol/interaction/Select';
 import OlInteractionDragRotateAndZoom from 'ol/interaction/DragRotateAndZoom';
 
+import OlRegularShape   from 'ol/style/RegularShape';
 import OlCircle         from 'ol/style/Circle';
 import OlStroke         from 'ol/style/Stroke';
 import OlStyle          from 'ol/style/Style';
@@ -181,8 +182,8 @@ export class MapsComponent implements OnInit {
         
         ///////////////////////////////////////////////////////////////////////////////
         ///////////////////////////////////////////////////////////////////////////////
-        this.minRange = moment().toDate();
-        this.maxRange = moment().subtract(30,'days').toDate();
+        this.maxRange = moment().toDate();
+        this.minRange = moment().subtract(30,'days').toDate();
         
         ///////////////////////////////////////////////////////////////////////////////
         ///////////////////////////////////////////////////////////////////////////////
@@ -463,7 +464,10 @@ export class MapsComponent implements OnInit {
         let obs: Observable<FeatureCache>;
 
         if ( this.trax[id] === undefined ) {
-            obs = this.api.getTrack(v.vessel_id)
+            const t0 = this.minRange.getTime() / 1000;
+            const t1 = this.maxRange.getTime() / 1000;
+            
+            obs = this.api.getTrack(v.vessel_id, t0, t1)
                     .pipe ( map((data) => {
                         const coords = data.map(p => [p[1], p[2]]);
                         const tag = data.map(p => new OlFeature({
@@ -512,7 +516,6 @@ export class MapsComponent implements OnInit {
                 
         obs.subscribe (f => {
             if ( evt.option.selected ) {
-                console.log(f);
                 this.geos[id] = f;
                 this.Area.getSource().addFeature(f);
             } else {
@@ -526,6 +529,7 @@ export class MapsComponent implements OnInit {
     public marked(v: Scape) : boolean {
         return this.marx.includes(v.vessel_id);
     }
+    
     /////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////
     public changeRange() {
@@ -540,36 +544,38 @@ export class MapsComponent implements OnInit {
     /////////////////////////////////////////////////////////////////////////////////////
     private styleScape (feature, resolution) {
         const prop = feature.getProperties()
-        if ( !prop.tstamp )
-            return
-        
         if ( !this.marx.some (v => v == prop.vessel_id) ) {
             return;
         }
             
             
         let image;
-        if ( prop.lost ) {
-            image = new OlCircle({ radius: 5,
-                                  fill: new OlFill({color: 'lime'}),
-                                  stroke: new OlStroke({color: 'lightgray', width: 2 }) });
-        } else if ( prop.miss ) {
-            image = new OlCircle({ radius: 8,
-                                  fill: new OlFill({color: 'darkorange'}),
-                                  stroke: new OlStroke({color: 'red', width: 3 }) });
+        if ( prop.dock ) {
+            image = new OlRegularShape({ radius1: 7, radius2: 4, points: 5,
+                                  fill: new OlFill({color: 'black'}),
+                                  stroke: new OlStroke({color: 'lightgray', width: 1 }) });
         } else {
-            image = new OlCircle({ radius: 5,
-                                  fill: new OlFill({color: 'firebrick'}),
-                                  stroke: new OlStroke({color: 'red', width: 2 }) });
+            if ( prop.sail ) {
+                image = new OlRegularShape({ radius1: 5, radius2: 2, points: 5,
+                                      fill: new OlFill({color: 'green'}),
+                                      stroke: new OlStroke({color: 'gray', width: 1 }) });
+            } else if ( prop.miss ) {
+                image = new OlCircle({ radius: 5,
+                                      fill: new OlFill({color: 'gold'}),
+                                      stroke: new OlStroke({color: 'goldenrod', width: 3 }) });
+            } else if ( prop.lost ) {
+                image = new OlRegularShape({ radius: 8, points: 3,
+                                      fill: new OlFill({color: 'firebrick'}),
+                                      stroke: new OlStroke({color: 'red', width: 2 }) });
+            }
+            
         }
-        
         
         const style = [
             new OlStyle ({
                 image: image
             }) 
         ];
-        
 
         if ( this.names ) {
             style.push(new OlStyle({

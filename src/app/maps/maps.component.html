@@ -12,7 +12,6 @@
                 <mat-icon>settings</mat-icon>
             </div>
             <div fxFlex fxLayoutAlign="center center" 
-                 *nyxAuth="'map:all'" 
                  (click)="menu.page=2" 
                  [ngClass]="{'active': menu.page==2}">
                 <mat-icon>notifications</mat-icon>
@@ -127,8 +126,8 @@
                                 </div>
                             </mat-panel-title>
                         </mat-expansion-panel-header>
-                        <div fxLayout="row wrap" fxLayoutAlign="start">
-                            <div fxFlex="100%" fxLayout="row" fxLayoutAlign="space-between center">
+                        <div fxLayout="column" fxLayoutAlign="start">
+                            <div fxFlex fxLayout="row" fxLayoutAlign="space-between center" class="vessel-actions">
                                 <a [routerLink]="'/vessels/'+v.vessel_id">detalhes</a>
                                 <button mat-icon-button matTooltip="Localizar"
                                         (click)="seek(v)"><mat-icon>pin_drop</mat-icon></button>
@@ -160,8 +159,8 @@
                 {{selected?.sog * 1852/3600}} kn &ang;  {{selected?.head}}&deg; ({{selected?.head|headTo}})
             </span>
             <span>
-                {{selected?.tstamp | amFromUnix | amLocal | amDateFormat: 'HH:mm DD/MMM'}}
-                <small>({{selected?.tstamp | amFromUnix | amTimeAgo}})</small>        
+                {{selected?.lastseen | amLocal | amDateFormat: 'HH:mm DD/MMM'}}
+                <small>({{selected?.lastseen | amTimeAgo}})</small>        
             </span>        
         </div>
     </mat-drawer-content>

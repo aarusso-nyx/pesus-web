@@ -9,7 +9,7 @@
                 <mat-icon>print</mat-icon>
             </button>
         </div>
-        <span fxFlex="50" class="text-center">Viagem</span>
+        <span fxFlex="50" class="text-center">{{vessel?.vessel_name}}</span>
         <ng-container [ngSwitch]="tab.page">
             <!-- Voyage-->
             <span *ngSwitchCase="1" fxFlex fxLayoutAlign="end">

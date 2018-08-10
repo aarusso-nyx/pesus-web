@@ -38,7 +38,7 @@ export class AuthService {
         responseType: 'token id_token',
         audience: 'urn:api:nyx:pesca',
         redirectUri: environment.redirectUri,
-        scope: 'openid'
+        scope: 'openid update:current_user_metadata'
         });
     
     ///////////////////////////////////////////////////////////////////
@@ -130,7 +130,7 @@ export class AuthService {
     ///////////////////////////////////////////////////////////////////
     public handleAuthentication() {
         this.auth0.parseHash((err, authResult) => {
-            if (authResult && authResult.accessToken && authResult.idToken) {
+            if (authResult && authResult.accessToken && authResult.idToken) {                
                 window.location.hash = '';
                 this.setSession(authResult);
                 this.identify();

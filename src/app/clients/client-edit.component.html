@@ -127,6 +127,13 @@
         </table>
     </mat-tab>
     <mat-tab label="Pescadores">
+        <div style="padding: 1em"></div>
+        <div *ngFor="let p of client.wants" style="padding-left: 2em">
+            <button mat-icon-button *ngIf="p.wants" (click)="unlike(p)"><mat-icon>star</mat-icon></button>
+            <button mat-icon-button *ngIf="!p.wants" (click)="like(p)"><mat-icon>star_border</mat-icon></button>
+            <span>{{p.person_name}}</span>
+        </div>
+        <!--
         <table mat-table matSort [dataSource]="staff">
             <ng-container matColumnDef="picture">
                 <th mat-header-cell *matHeaderCellDef></th>
@@ -151,6 +158,7 @@
             <tr mat-header-row *matHeaderRowDef="staff_cols"></tr>
             <tr mat-row *matRowDef="let row; columns: staff_cols;"></tr>
         </table>
+-->
     </mat-tab>
     <mat-tab label="Documentação">
         <div style="padding: 1em"></div>
