@@ -280,7 +280,24 @@
     <mat-tab label="Alarmes">
         <div style="padding: 1em"></div>
     </mat-tab>
-    <mat-tab label="Eventos">
+    <mat-tab label="Manutenção" *nyxAuth="'handle:service'">
         <div style="padding: 1em"></div>
+        <div fxLayout="row" fxLayoutAlign="start">
+        <button [disabled]="!vessel.service.service_id" 
+                color="primary"
+                mat-raised-button (click)="maint(false)">
+            Retornar Operação
+        </button>
+        <button [disabled]="!!vessel.service.service_id" fxFlexOffset="3em" 
+                color="warn"
+                mat-raised-button (click)="maint(true)">
+            Entrar em Manutenção
+        </button>
+        </div>
+        <div fxFlex fxLayout="row" fxLayoutAlign="start" style="padding-top: 1em;">
+            <em *ngIf="!!this.vessel.service.service_id">
+                Em manutenção desde {{vessel.service.start|date:'full'}}
+            </em>
+        </div>
     </mat-tab>
 </mat-tab-group>

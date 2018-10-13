@@ -67,6 +67,7 @@ import _sortBy from "lodash-es/sortBy";
 import _extend from "lodash-es/extend";
 import _remove from "lodash-es/remove";
 import _pull from "lodash-es/pull";
+import _pick from "lodash-es/pick";
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
@@ -108,6 +109,8 @@ export class MapsComponent implements OnInit {
     SAT: OlTileLayer;
     
     // Vector Layers
+    sSrc: OlSourceVector;
+    cSrc: OlSourceCluster;
     Ship: OlVectorLayer;
     Path: OlVectorLayer;
     Tags: OlVectorLayer;
@@ -123,7 +126,7 @@ export class MapsComponent implements OnInit {
     overlay:   OlOverlay;
     center:    OlView;
     tooltip:   HTMLElement;
-    selected:  any;
+    selected:  any = { range: null };
     extent:    number[] = [-71, -21, -7, 21];
     
     isHandset: Observable<BreakpointState> = this.breakpointObserver.observe(Breakpoints.Handset);    
@@ -135,18 +138,19 @@ export class MapsComponent implements OnInit {
     vessel_: Scape[];
     
     // Caches
-    marx:    number[]       = [];
+    marx:    number[];
     trax:    FeatureCache[] = [];
     geos:    OlFeature[]    = [];
+    base:    string;
+    unit:    string;
     
     // Style parameters
     grade:   boolean = true;
+    group:   boolean = true;
     fleet:   boolean = false;
     names:   boolean = true;
     track:   boolean = true;
-    
-    minRange: any;
-    maxRange: any;
+    esnid:   boolean = false;
     
     // Cluster Radius - for SourceCluster
     cRadius: number = 40;
@@ -161,13 +165,9 @@ export class MapsComponent implements OnInit {
                  private http: HttpClient,
                  private api: ApiService,
                  private auth:   AuthService) { 
-
-        // If can view all Fleet
-        this.auth.can('map:all')
-            .subscribe(v => {
-                this.api.clients.subscribe(c => this.clients = _sortBy(c,'client_name'));
-                this.api.areas.subscribe(c => this.areas = _sortBy(c,'geometry_name'));
-        });
+        
+        this.sSrc = new OlSourceVector();
+        this.cSrc = new OlSourceCluster({ distance: this.cRadius, source: this.sSrc });
         
         // Set-up Layers and Controls        
         this.pos3857 = new OlMousePosition({ projection: 'EPSG:3857', coordinateFormat: toStringXY});
@@ -179,31 +179,41 @@ export class MapsComponent implements OnInit {
                                           zoom: 5,
                                           minZoom: 5,
                                           maxZoom: 20 });
+
+        ///////////////////////////////////////////////////////////////////////////////
+        ///////////////////////////////////////////////////////////////////////////////
+        // If can view all Fleet
+        this.auth.can('map:all')
+            .subscribe(v => {
+                this.api.clients.subscribe(c => this.clients = _sortBy(c,'client_name'));
+                this.api.areas.subscribe(c => this.areas = _sortBy(c,'geometry_name'));
+        });
         
-        ///////////////////////////////////////////////////////////////////////////////
-        ///////////////////////////////////////////////////////////////////////////////
-        this.maxRange = moment().toDate();
-        this.minRange = moment().subtract(30,'days').toDate();
-        
-        ///////////////////////////////////////////////////////////////////////////////
-        ///////////////////////////////////////////////////////////////////////////////
-        // Setup all layers
-        this.setLayers();
-        this.api.seascape
-            .subscribe((vessels) => {
-                this.Ship.getSource().getSource().clear();
+        // Load settings
+        this.api.loadSettings()
+            .subscribe(s => { 
+            _extend(this, s.maps);
             
-                this.vessel_ = _sortBy(vessels,['client_name', 'vessel_name']);
-                this.vessels = this.vessel_;            
-                this.marx    = this.vessels.map(x => x.vessel_id); 
-                this.vessels.map((p: any) => {
-                    p.geometry = new OlPoint([p.lon, p.lat], 'XY');
-                    this.Ship.getSource().getSource().addFeature(new OlFeature(p));
-                    });
-            });
+            // Setup all layers
+            this.setLayers();
+    
+            this.cluster();
+            this.api.seascape
+                .subscribe((vessels) => {
+                    this.sSrc.clear();
+                    this.vessel_ = _sortBy(vessels.filter(v => v.service_id === null),
+                                           ['client_name', 'vessel_name']);
+                    this.vessels = this.vessel_;            
+                    this.marx = this.vessels.map(x => x.vessel_id); 
+                    this.vessels.map((p: any) => {
+                        p.geometry = new OlPoint([p.lon, p.lat], 'XY');
+                        this.sSrc.addFeature(new OlFeature(p));
+                        });
+                });
+        });    
+            
     }
     
-
     /////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////
     ngOnInit() {
@@ -234,7 +244,6 @@ export class MapsComponent implements OnInit {
         })
         ///////////////////////////////////////////////////////////////////////
         ///////////////////////////////////////////////////////////////////////
-        this.graticule.setMap(this.map);
         
         this.tooltip = document.getElementById('popup');
         this.overlay = new OlOverlay({ element: this.tooltip,
@@ -245,7 +254,11 @@ export class MapsComponent implements OnInit {
         });
 
         this.map.addOverlay(this.overlay);
-        
+
+
+        this.baseLayers({value: this.base});
+        this.coords      ({value: this.unit});        
+        this.graticule.setMap ( this.grade ? this.map : null);
         ///////////////////////////////////////////////////////////////////////
         ///////////////////////////////////////////////////////////////////////
         const EventDialog = function(evt){
@@ -254,19 +267,20 @@ export class MapsComponent implements OnInit {
             // Deselecting
             if ( evt.deselected[0] ) {
                 const sel = evt.deselected[0].getProperties();
-                this.selected = undefined;
+                this.show();
                 this.overlay.setPosition(undefined);
             }
 
             // Selecting
             if ( evt.selected[0] ) {
                 const geo = evt.selected[0].getGeometry().getCoordinates();
-                const fts = evt.selected[0].getProperties().features;
-                if (fts.length != 1) {
-                    return;
+                let props = evt.selected[0].getProperties();
+                
+                if ( props.features && props.features[0] ) {
+                    props = props.features[0].getProperties();
                 }
 
-                this.selected = fts[0].getProperties();
+                this.show(props);
                 this.overlay.setPosition(coord);
             }
         }
@@ -286,6 +300,23 @@ export class MapsComponent implements OnInit {
         this.center.fit (new OlPoint(p), {maxZoom: z});
     }
 
+    public show(v) {
+        if ( !v ) {
+            this.selected = { range: null };
+        } else {
+            this.selected = v;
+        }
+    }
+    
+    public save() {
+        const fields = ['names','esnid','fleet','group','grade','track',
+                        'cRadius','cTracks','base', 'unit', 'client_id', 
+                        'extent'];
+        
+        const s = { maps: _pick(this,fields) };
+        this.api.saveSettings(s).subscribe();
+    }
+    
     /////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////
     private redraw ( l: OlVectorLayer ) {
@@ -326,8 +357,6 @@ export class MapsComponent implements OnInit {
         // Vessel Clusters
         this.Ship = new OlVectorLayer ({title: 'Barcos', visible: true, 
                                        style: this.styleCluster.bind(this),
-                                      source: new OlSourceCluster({ distance: this.cRadius, 
-                                                                      source: new OlSourceVector()  })
         });
 
         // Vessel tracks
@@ -384,6 +413,9 @@ export class MapsComponent implements OnInit {
     }
     
     public baseLayers(evt) {
+        this.base = evt.value;
+        this.save();
+        
         if ( evt.value == 'osm' ) {
             this.OSM.setVisible(true);
             this.SAT.setVisible(false);
@@ -402,12 +434,14 @@ export class MapsComponent implements OnInit {
     /////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////
     public filterClient(evt) {
-        this.vessels = this.vessel_.filter (v => (evt.value == undefined) || v.client_id == evt.value);
-    }
-
-    public radiusChange() {
-        const src = this.Ship.getSource().getSource();
-        this.Ship.setSource (new OlSourceCluster({ distance: this.cRadius, source: src }));
+        this.vessels = this.vessel_.filter(v => (evt.value == undefined) || v.client_id == evt.value);
+        this.save();
+    }    
+    
+    public cluster() {
+        this.Ship.setSource (this.group ? this.cSrc : this.sSrc);
+        this.Ship.setStyle  (this.group ? this.styleCluster.bind(this) 
+                                        : this.styleScape.bind(this));
         this.redraw(this.Ship);
     }
     
@@ -417,9 +451,17 @@ export class MapsComponent implements OnInit {
                 this.names = evt.option.selected;
                 this.redraw(this.Ship);
                 break;
+            case 'esnid':
+                this.esnid = evt.option.selected;
+                this.redraw(this.Ship);
+                break;
             case 'fleet':
                 this.fleet = evt.option.selected;
                 this.redraw(this.Ship);
+                break;
+            case 'group':
+                this.group = evt.option.selected;
+                this.cluster();
                 break;
             case 'track':
                 this.track = evt.option.selected;
@@ -432,10 +474,15 @@ export class MapsComponent implements OnInit {
                 break;
             default:
                 break;
-        }        
+        }
+        
+        this.save();
     }
     
     public coords(evt) {
+        this.unit = evt.value;
+        this.save();
+        
         if ( evt.value == 'dms' ) {
             this.map.removeControl(this.pos3857)
             this.map.addControl(this.pos4326)
@@ -458,52 +505,7 @@ export class MapsComponent implements OnInit {
         }
         this.redraw(this.Ship);
     }
-    
-    public tracks(evt, v: Scape) {
-        const id = v.vessel_id;
-        let obs: Observable<FeatureCache>;
-
-        if ( this.trax[id] === undefined ) {
-            const t0 = this.minRange.getTime() / 1000;
-            const t1 = this.maxRange.getTime() / 1000;
-            
-            obs = this.api.getTrack(v.vessel_id, t0, t1)
-                    .pipe ( map((data) => {
-                        const coords = data.map(p => [p[1], p[2]]);
-                        const tag = data.map(p => new OlFeature({
-                                t: moment.unix(p[0]).format('HH:mm'),
-                                d: moment.unix(p[0]).format('DD/MMM'),
-                                geometry: new OlPoint([p[1], p[2]]),
-                                vel: p[3],
-                                dir: p[4],
-                        }));
-                    
-                        const f: FeatureCache = {
-                            tag: tag,
-                            feature: new OlFeature({
-                                geometry: new OlLineString(coords, 'XY')
-                            }),  
-                        };
-                
-                        return f;
-                    }) );
-        } else {
-            obs = of(this.trax[id])
-        }
-        
-        
-        obs.subscribe (f => {
-            if ( evt.checked ) {
-                this.trax[id] = f;
-                this.Path.getSource().addFeature(f.feature);
-                this.Tags.getSource().addFeatures(f.tag);
-            } else {
-                this.Path.getSource().removeFeature(f.feature);
-                f.tag.map ( y => this.Tags.getSource().removeFeature(y) );
-            }
-        });
-    }
-           
+               
     public zones (evt) {
         const id = evt.option.value.geometry_id;
         let obs: Observable<OlFeature>;
@@ -529,12 +531,7 @@ export class MapsComponent implements OnInit {
     public marked(v: Scape) : boolean {
         return this.marx.includes(v.vessel_id);
     }
-    
-    /////////////////////////////////////////////////////////////////////////////////////
-    /////////////////////////////////////////////////////////////////////////////////////
-    public changeRange() {
-        console.log(this.minRange, this.maxRange);
-    }
+
     
     /////////////////////////////////////////////////////////////////////////////////////
     /////////////////////////////////////////////////////////////////////////////////////
@@ -547,29 +544,45 @@ export class MapsComponent implements OnInit {
         if ( !this.marx.some (v => v == prop.vessel_id) ) {
             return;
         }
-            
-            
+        
         let image;
-        if ( prop.dock ) {
-            image = new OlRegularShape({ radius1: 7, radius2: 4, points: 5,
+        if ( prop.down ) {
+            image = new OlCircle({ radius: 5,
                                   fill: new OlFill({color: 'black'}),
                                   stroke: new OlStroke({color: 'lightgray', width: 1 }) });
-        } else {
-            if ( prop.sail ) {
-                image = new OlRegularShape({ radius1: 5, radius2: 2, points: 5,
+        } else if ( prop.dock ) {
+            if ( prop.live ) {
+                image = new OlCircle({ radius1: 5,
                                       fill: new OlFill({color: 'green'}),
                                       stroke: new OlStroke({color: 'gray', width: 1 }) });
             } else if ( prop.miss ) {
                 image = new OlCircle({ radius: 5,
                                       fill: new OlFill({color: 'gold'}),
-                                      stroke: new OlStroke({color: 'goldenrod', width: 3 }) });
+                                      stroke: new OlStroke({color: 'goldenrod', width: 1 }) });
+            } else if ( prop.lost ) {
+                image = new OlCircle({ radius: 8,
+                                      fill: new OlFill({color: 'firebrick'}),
+                                      stroke: new OlStroke({color: 'red', width: 2 }) });
+            }
+        } else {
+            if ( prop.live ) {
+                image = new OlRegularShape({ radius1: 5, radius2: 2, points: 5,
+                                      fill: new OlFill({color: 'green'}),
+                                      stroke: new OlStroke({color: 'gray', width: 1 }) });
+            } else if ( prop.miss ) {
+                image = new OlRegularShape({ radius: 5, radius2: 2, points: 5,
+                                      fill: new OlFill({color: 'gold'}),
+                                      stroke: new OlStroke({color: 'goldenrod', width: 1 }) });
             } else if ( prop.lost ) {
                 image = new OlRegularShape({ radius: 8, points: 3,
                                       fill: new OlFill({color: 'firebrick'}),
                                       stroke: new OlStroke({color: 'red', width: 2 }) });
-            }
-            
+            }            
         }
+        if ( !image ) {
+            console.log(prop);
+        }
+        
         
         const style = [
             new OlStyle ({
@@ -626,10 +639,10 @@ export class MapsComponent implements OnInit {
     /////////////////////////////////////////////////////////////////////////////////////
     private styleTrack (feature, resolution) {
         let _start = null;
-        
+            
         const track = [new OlStyle ({
                 stroke: new OlStroke({ 
-                    color: 'yellow', 
+                    color: feature.get('color'), 
                  lineDash: [8, 4],
                     width: 1 })
         })];
@@ -714,5 +727,126 @@ export class MapsComponent implements OnInit {
             fill: new OlFill({color: [0.7, 0.7, 0.7, 0.3]})
         });
     }    
-}
+  
+    
+    /////////////////////////////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////
+    tool ( mode: string ) {
+        switch ( mode ) {
+            case 'none':
+                break;
+            case 'select':
+                break;
+            case 'query':
+                break;
+            case 'measureLine':
+                break;
+            case 'measurePoly':
+                break;
+            case 'measureLine':
+                break;
+            case 'measurePoly':
+                break;
+            case 'edit':
+                break;
+            case 'remove':
+                break;
+            case 'move':
+                break;
+            case 'save':
+                break;
+            case 'clear':
+                break;
+            default:
+                break;
+        }
+    }
+    
+    
+    
+    dropTrack(v: any) {
+        console.log('delTrack', v.vessel_id);
+        const t = this.trax[v.vessel_id];
+        if ( !t ) {
+            return;
+        } else {
+            this.Path.getSource().removeFeature(t.feature);
+            t.tag.map ( y => this.Tags.getSource().removeFeature(y) );
+        }
+    }
+     
+    
+    showTrack(v: any) {
+        console.log('showTrack', v.vessel_id);
+        const t = this.trax[v.vessel_id];
+        if ( !t ) {
+            this.getTrack(v);
+        } else {
+            this.Path.getSource().addFeature(t.feature);
+            this.Tags.getSource().addFeatures(t.tag);
+        }
+    }
+    
+    
+    changeColor(v: any) {
+        console.log('changeColor', v.vessel_id);
+        const t = this.trax[v.vessel_id];
+        if ( !t ) {
+            this.getTrack(v);
+        } else {
+            t.feature.set('color', v.color);
+            this.dropTrack(v);
+            this.showTrack(v);
+        }
+    }
+    
+    
+ranges: any = {
+  'Hoje': [moment(), moment()],
+  'Ontem': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+  'Últ. 7 Dias': [moment().subtract(6, 'days'), moment()],
+  'Últ. 30 Days': [moment().subtract(29, 'days'), moment()],
+  'Esse Mês': [moment().startOf('month'), moment().endOf('month')],
+  'Mês Passado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+}    
+    
+    
+    changeRange(v: any) {
+        this.dropTrack(v);
+        this.getTrack(v);            
+    }
+    
+    private getTrack(v: any) {
+        let obs: Observable<FeatureCache>;
 
+        const t0 = v.range.startDate.unix();
+        const t1 = v.range.endDate.unix();
+            
+        this.api.getTrack(v.vessel_id, t0, t1)
+            .pipe ( map((data) => {
+                    const coords = data.map(p => [p[1], p[2]]);
+                    const tag = data.map(p => new OlFeature({
+                            t: moment.unix(p[0]).format('HH:mm'),
+                            d: moment.unix(p[0]).format('DD/MMM'),
+                            geometry: new OlPoint([p[1], p[2]]),
+                            vel: p[3],
+                            dir: p[4],
+                    }));
+
+                    const f: FeatureCache = {
+                        tag: tag,
+                        feature: new OlFeature({
+                            geometry: new OlLineString(coords, 'XY'),
+                            color: 'yellow'
+                        }),  
+                    };
+
+                    return f;
+                }) )
+            .subscribe (f => {
+                this.trax[v.vessel_id] = f;
+                this.Path.getSource().addFeature(f.feature);
+                this.Tags.getSource().addFeatures(f.tag);
+            });
+    }
+ }

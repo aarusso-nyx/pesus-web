@@ -133,32 +133,6 @@
             <button mat-icon-button *ngIf="!p.wants" (click)="like(p)"><mat-icon>star_border</mat-icon></button>
             <span>{{p.person_name}}</span>
         </div>
-        <!--
-        <table mat-table matSort [dataSource]="staff">
-            <ng-container matColumnDef="picture">
-                <th mat-header-cell *matHeaderCellDef></th>
-                <td mat-cell *matCellDef="let element"> 
-                    <img #img src="{{element.picture}}" class="avatar" alt="avatar"
-                         (error)="img.src='/assets/insit_favicon-180x180.png'">
-                </td>
-            </ng-container>
-            <ng-container matColumnDef="person_name">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
-                <td mat-cell *matCellDef="let element"> 
-                    {{element.person_name}}
-                </td>
-            </ng-container>
-            <ng-container matColumnDef="birthday">
-                <th mat-header-cell *matHeaderCellDef mat-sort-header>Nome</th>
-                <td mat-cell *matCellDef="let element"> 
-                    {{element.birthday}}
-                </td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="staff_cols"></tr>
-            <tr mat-row *matRowDef="let row; columns: staff_cols;"></tr>
-        </table>
--->
     </mat-tab>
     <mat-tab label="Documentação">
         <div style="padding: 1em"></div>

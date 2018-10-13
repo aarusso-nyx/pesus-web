@@ -231,7 +231,7 @@ export class VoyageEditComponent implements OnInit {
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     addCrew() {
-        this.crew.push({});
+        this.crew.push({voyage_id: this.id});
     }
             
     delCrew ( c: Crew ) {

@@ -235,12 +235,12 @@ export class ClientEditComponent implements OnInit {
     ///////////////////////////////////////////////////////////////////
     like(p: any) {
         this.api.setWantsWith(this.client.client_id, p.person_id)
-            .subscribe(() => p.wants);
+            .subscribe(() => p.wants = true);
     }
     
     unlike(p: any) {
         this.api.delWantsWith(this.client.client_id, p.person_id)
-            .subscribe(() => p.wants);
+            .subscribe(() => p.wants = false);
     }    
     
      ///////////////////////////////////////////////////////////////////

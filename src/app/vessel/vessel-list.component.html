@@ -1,5 +1,5 @@
 <mat-toolbar fxLayout="row" fxLayoutAlign="space-between center">
-    <mat-form-field fxFlex="20%" fxFlexOffset="5%" [floatLabel]="'never'">
+    <mat-form-field fxFlex="25%" fxFlexOffset="5%" [floatLabel]="'never'">
         <mat-select placeholder="Clientes"  *nyxAuth="'map:all'"
                     (selectionChange)="filterClient($event)" >
             <mat-option>Todos</mat-option>
@@ -8,39 +8,43 @@
             </mat-option>
         </mat-select>
     </mat-form-field>
-    <span fxFlex="50%" class="text-center">Frota</span>
-    <div fxFlex="25%" fxLayout="row" fxLayoutAlign="end">
-        <mat-checkbox [labelPosition]="'before'"
-                      (change)="filterStatus($event)">
-            Mostrar Todos
-        </mat-checkbox>
-    </div>
+    <span fxFlex class="text-center">Frota</span>
+    <mat-form-field fxFlex="25%" fxFlexOffset="5%" [floatLabel]="'never'">
+        <mat-select placeholder="Situação" multiple [value]="filters"
+                    (selectionChange)="filterStatus($event)" >
+            <mat-option name="status" *ngFor="let s of statii" 
+                        checked
+                        [value]="s.status_col">
+            {{ s.status_name }}
+            </mat-option>
+        </mat-select>
+    </mat-form-field>
     <span fxFlex="5%"></span>
 </mat-toolbar>
 
 <table mat-table matSort [dataSource]="vessels">
+    <ng-container matColumnDef="index">
+        <th mat-header-cell *matHeaderCellDef>Index</th>
+        <td mat-cell *matCellDef="let element; let i=index;"> 
+            {{i+1}}
+        </td>
+    </ng-container>
     <ng-container matColumnDef="client_name">
-        <th mat-header-cell *matHeaderCellDef>Cliente</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Cliente</th>
         <td mat-cell *matCellDef="let element"> 
             <a [routerLink]="'/clients/'+element.client_id"> {{element.client_name}}</a>
         </td>
     </ng-container>
     <ng-container matColumnDef="esn">
-        <th mat-header-cell *matHeaderCellDef>ESN</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>ESN</th>
         <td mat-cell *matCellDef="let element"> 
             {{element.esn}}
         </td>
     </ng-container>
     <ng-container matColumnDef="vessel_name">
-        <th mat-header-cell *matHeaderCellDef>Embarcação</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Embarcação</th>
         <td mat-cell *matCellDef="let element"> 
             <a [routerLink]="element.vessel_id"> {{element.vessel_name}}</a>
-        </td>
-    </ng-container>
-    <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef>Situação</th>
-        <td mat-cell *matCellDef="let element"> 
-            {{status(element)}}
         </td>
     </ng-container>
     <ng-container matColumnDef="position">
@@ -50,12 +54,33 @@
         </td>
     </ng-container>
     <ng-container matColumnDef="lastseen">
-        <th mat-header-cell *matHeaderCellDef>em</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>em</th>
         <td mat-cell *matCellDef="let element" [matTooltip]="element.lastseen"> 
             {{element.lastseen | amTimeAgo}}
         </td>
     </ng-container>
-
+    <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef>Situação</th>
+        <td mat-cell *matCellDef="let element">
+            <span class="icon-status" [matTooltip]="power_tooltip(element)">
+                <mat-icon [ngClass]="power_style(element)">
+                    {{power_status(element)}}
+                </mat-icon>
+            </span>
+            
+            <span class="icon-status" [matTooltip]="track_tooltip(element)">
+                <mat-icon>
+                    {{track_status(element)}}
+                </mat-icon>
+            </span>
+            
+            <span class="icon-status" [matTooltip]="'Atracado'">
+                <mat-icon *ngIf="element.dock">
+                    home
+                </mat-icon>
+            </span>
+        </td>
+    </ng-container>
     <tr mat-header-row *matHeaderRowDef="vessels_cols"></tr>
     <tr mat-row *matRowDef="let row; columns: vessels_cols;" [ngClass]="style(row)"></tr>
 </table>

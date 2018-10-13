@@ -16,7 +16,8 @@ import { Observable, of } from "rxjs";
 import { ApiService     } from '../api.service';
 import { ConfirmDialog  } from '../dialogs/confirm.dialog';
 import { AuthService    } from '../auth/auth.service';
-import { Person, Client } from '../app.interfaces';
+import { Person, Client,
+         Area } from '../app.interfaces';
 
 import _omit        from "lodash-es/omit";
 import _sortBy      from "lodash-es/sortBy";
@@ -33,7 +34,8 @@ export class PeopleListComponent implements OnInit {
     
     client_id: number;
     clients: Client[];
-
+    areas: Area[];
+    
     people: MatTableDataSource<Person>;
     people_cols: string[] = ['person_name'];
     
@@ -68,10 +70,10 @@ export class PeopleListComponent implements OnInit {
     styleUrls: ['./people.component.css']
 })
 export class PeopleEditComponent implements OnInit {
-    id:     number;
     fresh:  boolean = true;
     ready:  boolean = false;
 
+    areas:  any[];
     person: Person;
     form: FormGroup;
 
@@ -86,11 +88,35 @@ export class PeopleEditComponent implements OnInit {
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     ngOnInit() {
+        // Create Form Group
+        this.form = this.fb.group({
+            person_id:      '',
+            person_name:   ['', Validators.required],
+            area_id:       ['', Validators.required],
+            master:         false,
+            cpf:        '',
+            pis:        '',
+            birthday:   '',
+            rgi_number: '',
+            rgi_issued: '',
+            rgi_issuer: '',
+            rgi_expire: '',
+            ric_number: '',
+            ric_issued: '',
+            ric_expire: '',
+            rgp_number: '',
+            rgp_issued: '',
+            rgp_expire: '',
+            rgp_permit: '',
+        });
+            
+        this.api.areas.subscribe( a => this.areas = a);
+        
         this.route.params.subscribe( addr => {            
-            let obs: Observable<Person>;
+            let obs: Observable<any>;
             
             if ( addr.person_id === 'new') {
-                obs = of({ client_id: this.id, master: false });
+                obs = of({master: false});
             } else {
                 obs = this.api.getPerson(addr.person_id);
             }
@@ -98,39 +124,15 @@ export class PeopleEditComponent implements OnInit {
             obs.subscribe( (data) => {
                 this.ready  = true;
                 this.person = data;
-                this.form.reset(this.person);
-                this.fresh = !(this.person.person_id)
-                this.fresh ? this.form.enable() : 
-                             this.form.disable();
+                this.fresh = !(this.person.person_id);
+                
+                if ( !!this.form ) {
+                    this.form.reset(this.person);
+                    this.fresh ? this.form.enable() : 
+                                 this.form.disable();
+                }
             });
         });
-         
-        this.api.clientId
-            .subscribe((id) => {
-                this.id = id;
-            
-                // Create Form Group
-                this.form = this.fb.group({
-                    client_id:      this.id,
-                    person_id:      '',
-                    person_name:   ['', Validators.required],
-                    master:         false,
-                    cpf:        '',
-                    pis:        '',
-                    birthday:       '',
-                    rgi_number: '',
-                    rgi_issued: '',
-                    rgi_issuer: '',
-                    rgi_expire: '',
-                    ric_number: '',
-                    ric_issued: '',
-                    ric_expire: '',
-                    rgp_number: '',
-                    rgp_issued: '',
-                    rgp_expire: '',
-                    rgp_permit: '',
-                });
-            });
     }
     
     ///////////////////////////////////////////////////////////////////
@@ -194,12 +196,12 @@ export class PeopleEditComponent implements OnInit {
     ///////////////////////////////////////////////////////////////////
     like(c: any) {
         this.api.setWorksWith(this.person.person_id, c.client_id)
-            .subscribe(() => c.works);
+            .subscribe(() => c.works = true);
     }
     
     unlike(c: any) {
         this.api.delWorksWith(this.person.person_id, c.client_id)
-            .subscribe(() => c.works);
+            .subscribe(() => c.works = false);
     }
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////

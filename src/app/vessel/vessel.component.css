@@ -26,3 +26,37 @@
     font-weight: bold;
 /*    background-color: lightcoral;    */
 }
+
+.down { 
+    background-color: black;
+}
+
+.down * { 
+    color: white !important;
+}
+
+table a {
+    font-weight: bolder;
+    text-decoration: none;
+    color: black;
+}
+table a:hover {
+    text-decoration: underline;
+}
+
+
+.fail { 
+    color: firebrick;
+}
+
+.power {
+    color: green;
+}
+
+.batt { 
+    color: darkgrey;
+}
+
+.icon-status {
+    margin-right: 1em;
+}

@@ -24,7 +24,9 @@ registerLocaleData(localePt, 'pt', localePtExtra);
           OWL_DATE_TIME_LOCALE    } from 'ng-pick-datetime';
 
 import { MomentModule } from 'ngx-moment';
-
+import { RbFabSpeedDialModule } from 'rb-fab-speed-dial';
+import { NgxDaterangepickerMd } from 'ngx-daterangepicker-material';
+import { ColorPickerModule} from 'ngx-color-picker';
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 import { FlexLayoutModule }         from "@angular/flex-layout";
@@ -156,7 +158,10 @@ import { ClientListComponent,
     MatTooltipModule,
     MatNativeDateModule, 
     MatRippleModule,
-    ScrollDispatchModule,
+    RbFabSpeedDialModule,
+    NgxDaterangepickerMd,
+    ColorPickerModule,
+      ScrollDispatchModule,
     JwtModule.forRoot({
                 config: {
                 tokenGetter: tokenGetter,

@@ -10,7 +10,7 @@ import { filter, tap,
          pluck, map } from 'rxjs/operators';
 
 import { Person, Wind, Area,
-         WindDir, Fish, 
+         WindDir, Fish, Service,
          FishingType, Lance,
          Vessel, Voyage,
          Client, User    } from './app.interfaces';
@@ -150,6 +150,17 @@ export class ApiService {
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
+    loadSettings() : Observable<any> {
+        return this.auth.usrdata;
+    }
+
+    saveSettings(load) : Observable<any> {
+        return this.auth.settings(load);
+    }
+    
+    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
     // Client Management
     get clientId() : Observable<number> {
         return this.auth.appdata.pipe( pluck('client'), pluck('client_id') );
@@ -250,7 +261,20 @@ export class ApiService {
     delVesselCheck(v: number, c: number) : Observable<any> {
         return this.http.delete (env.baseURL+`/vessels/${v}/check/${c}`);
     }
+
         
+    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
+    postVesselService(v: number) : Observable<Service> {
+        return this.http.post(env.baseURL+`/vessels/${v}/service`, {});
+    }
+    
+    putVesselService(v: number) : Observable<Service> {
+        return this.http.put(env.baseURL+`/vessels/${v}/service`, {});
+    }
+    
+
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////

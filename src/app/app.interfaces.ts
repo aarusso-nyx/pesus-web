@@ -56,6 +56,14 @@ export interface Vessel {
     ship_breadth?:       number;
     ship_lenght?:        number;
     created_at?:         Date;
+    service?:            Service;
+};
+
+export interface Service {
+    service_id?:         number;
+    vessel_id?:          number;
+    start?:              Date;
+    finish?:             Date;
 };
 
 export interface Scape {
@@ -69,7 +77,7 @@ export interface Scape {
     sog?:                number;
     head?:               number;
     lastseen?:           Date;
-}
+};
 
 
 export interface Voyage {

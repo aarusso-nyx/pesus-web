@@ -17,6 +17,7 @@ import { Observable, of } from "rxjs";
 import { ApiService } from '../api.service';
 import { ConfirmDialog } from '../dialogs/confirm.dialog';
 import { Vessel, Voyage, 
+         Service,
          Client, Area  } from '../app.interfaces';
 
 import _omit from "lodash-es/omit";
@@ -32,23 +33,35 @@ import _sortBy      from "lodash-es/sortBy";
 export class VesselListComponent implements OnInit {
     @ViewChild(MatSort) sort: MatSort;
     
-    bShow: boolean = false;
     client_id: number;
     clients: Client[];
+    filters: string[];
     
     vessels: MatTableDataSource<any>;
-    vessels_cols: string[] = ['client_name', 'esn', 'vessel_name', 
-                      'status', 'position', 'lastseen'];
+    vessels_cols: string[] = ['index', 'client_name', 'esn', 'vessel_name', 
+                              'position', 'lastseen', 'status'];
     
-    constructor(private api: ApiService) { }
+    statii = [{status_name: 'Perdidos',   status_col: 'lost'}, 
+              {status_name: 'Atracados',  status_col: 'dock'}, 
+              {status_name: 'Navegando',  status_col: 'live'}, 
+              {status_name: 'Atrasados',  status_col: 'miss'}, 
+              {status_name: 'Manutenção', status_col: 'down'}];
+    
+    constructor(private api: ApiService) { 
+        this.filters = this.statii.map(s => s.status_col);
+    }
 
     ngOnInit() {
         this.api.seascape
             .subscribe (data => {
                 this.vessels = new MatTableDataSource<any>(data);
                 this.vessels.filterPredicate = (data, filter) : boolean => {
-                    return (this.bShow || (data.miss || data.lost)) &&
-                    ((this.client_id == null) || (this.client_id == data.client_id));        
+                    return ((this.client_id == null) || (this.client_id == data.client_id))
+                        && ((this.filters.includes('down') && data.down) ||
+                            (this.filters.includes('live') && data.live) ||
+                            (this.filters.includes('dock') && data.dock) ||
+                            (this.filters.includes('lost') && data.lost) ||
+                            (this.filters.includes('miss') && data.miss) );
                 }
                 this.vessels.filter = 'start';
                 this.vessels.sort = this.sort;
@@ -61,29 +74,82 @@ export class VesselListComponent implements OnInit {
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     public style(v) {
-        if ( v.lost ) {
+        if ( v.down ) {
+            return 'down';
+        } else if ( v.lost ) {
             return 'lost'; 
         } else if ( v.miss ) {
             return 'miss'; 
+        } else { 
+            return 'live';
         }
     }      
     
-    public status(v) {
-        if ( v.lost ) {
+    public track_status(v) {
+        if ( v.down ) {
+            return 'build';
+        } else if ( v.lost ) {
+            return 'warning'; 
+        } else if ( v.miss ) {
+            return 'change_history'; 
+        } else if ( v.live ) {
+            return 'check_circle_outline';
+        }
+    }  
+    
+    public track_tooltip(v) {
+        if ( v.down ) {
+            return 'Manutenção';
+        } else if ( v.lost ) {
             return 'Perdido'; 
         } else if ( v.miss ) {
             return 'Atrasado'; 
-        } else if ( v.sail ) {
-            return 'Navegando';
-        } else if ( v.dock ) {
-            return 'Atracado';
+        } else if ( v.live ) {
+            return 'Transmitindo';
         }
     }  
+    
+    public power_status(v) {
+        if (  v.battery_fail ) {
+            return 'battery_alert';
+        }
+
+        if ( v.external_power ) {
+            return 'battery_charging_full';
+        }
+        
+        return 'battery_std'
+    }
+    
+    public power_tooltip(v) {
+        if (  v.battery_fail ) {
+            return 'Pilhas Fracas';
+        }
+
+        if ( v.external_power ) {
+            return 'Alimentação Externa';
+        }
+        
+        return 'Pilhas'
+    }
+    
+    public power_style(v) {
+        if (  v.battery_fail ) {
+            return 'fail';
+        }
+
+        if ( v.external_power ) {
+            return 'power';
+        }
+        
+        return 'batt'
+    }
     
     ///////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////
     public filterStatus(evt) {
-        this.bShow = evt.checked;
+        console.log(evt)
+        this.filters = evt.value;
         this.vessels.filter = 'status';
     }
     
@@ -253,7 +319,13 @@ export class VesselEditComponent implements OnInit {
         }
     }     
     
-    change(evt) {
-        console.log(evt);
+    maint(p) {
+        if (p) {
+            this.api.postVesselService(this.vessel.vessel_id)
+                .subscribe(data => this.vessel.service = data);
+        } else {
+            this.api.putVesselService(this.vessel.vessel_id)
+                .subscribe(data => this.vessel.service = {});
+        }
     }
 }

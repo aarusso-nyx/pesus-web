@@ -20,11 +20,20 @@
         
         <div [ngSwitch]="menu.page" class="drawer-content">
             <div *ngSwitchCase="1" fxLayout="column" class="drawer-tab">
+                <div fxFlex fxLayout="row" fxLayoutAlign="end">
+                    <button mat-icon-button (click)="save()">
+                        <mat-icon>save</mat-icon>
+                    </button>
+                </div>
+                
+                
                 <span class="caption">Mostrar:</span>
                 <mat-selection-list (selectionChange)="options($event)">
                     <mat-list-option checkboxPosition="before" value="names" [selected]="names">Nomes</mat-list-option>
+                    <mat-list-option checkboxPosition="before" value="esnid" [selected]="isnid">ESN</mat-list-option>
                     <mat-list-option checkboxPosition="before" value="fleet" [selected]="fleet">Armador</mat-list-option>
                     <mat-list-option checkboxPosition="before" value="grade" [selected]="grade">Grade</mat-list-option>
+                    <mat-list-option checkboxPosition="before" value="group" [selected]="group">Agrupar</mat-list-option>
                     <mat-list-option checkboxPosition="before" value="track" [selected]="track">Waypoints</mat-list-option>
                 </mat-selection-list>
 
@@ -38,14 +47,14 @@
                 </mat-selection-list>
 
                 <span class="caption">Camadas Base:</span>
-                <mat-button-toggle-group  (change)="baseLayers($event)" class="filters">
+                <mat-button-toggle-group  (change)="baseLayers($event)" [value]="base" class="filters">
                     <mat-button-toggle fxFlex="33%" value="osm" checked="true">Mapa</mat-button-toggle>
                     <mat-button-toggle fxFlex="33%" value="sat">Sat.</mat-button-toggle>
                     <mat-button-toggle fxFlex="33%" value="dhn">D.H.N.</mat-button-toggle>
                 </mat-button-toggle-group>        
 
                 <span class="caption">Posição em:</span>
-                <mat-button-toggle-group  (change)="coords($event)" class="filters">
+                <mat-button-toggle-group  (change)="coords($event)" [value]="unit" class="filters">
                     <mat-button-toggle fxFlex="33%" value="nil" checked="true">Sem</mat-button-toggle>
                     <mat-button-toggle fxFlex="33%" value="utm">UTM</mat-button-toggle>
                     <mat-button-toggle fxFlex="33%" value="dms">DMS</mat-button-toggle>
@@ -53,8 +62,9 @@
 
                 <span class="caption">Agrupamento:</span>
                 <mat-slider fxFlex thumbLabel class="slider"
+                            [disabled]="!group"
                             step="20" min="0" max="100" 
-                            (change)="radiusChange()"
+                            (change)="cluster()"
                             [(ngModel)]="cRadius"></mat-slider>
                 
                 <br/>
@@ -74,13 +84,13 @@
                 </mat-selection-list>
             </div>
             <div *ngSwitchDefault>
-                <mat-expansion-panel>
+                <mat-expansion-panel *nyxAuth="'map:all'">
                     <mat-expansion-panel-header>
                         <mat-panel-title><mat-icon>tune</mat-icon></mat-panel-title>
                         <mat-panel-description>Filtros</mat-panel-description>
                     </mat-expansion-panel-header>
-                    <div fxLayout="column" class="filters">
-                        <mat-form-field floatPlaceholder='always' fxFlex *nyxAuth="'map:all'">
+                    <div fxLayout="column" >
+                        <mat-form-field floatPlaceholder='always' fxFlex class="filters">
                             <mat-select placeholder="Clientes" (selectionChange)="filterClient($event)">
                                 <mat-option>Todos</mat-option>
                                 <mat-option name="clients" *ngFor="let c of clients" [value]="c.client_id">
@@ -88,30 +98,6 @@
                                 </mat-option>
                             </mat-select>
                         </mat-form-field>
-                        <div fxLayout="row" fxLayoutAlign="space-around">
-                            <mat-form-field floatPlaceholder='always'>
-                                <input placeholder="De" matInput required
-                                       name="from" type="datetime"
-                                       (change)="changeRange()"
-                                       [(ngModel)]="minRange"
-                                       [owlDateTime]="from">
-                                <mat-icon matSuffix class="trigger"
-                                          [owlDateTimeTrigger]="from">schedule</mat-icon>
-                                <owl-date-time #from></owl-date-time>
-                            </mat-form-field>
-                        </div>
-                        <div fxLayout="row" fxLayoutAlign="space-around">
-                            <mat-form-field floatPlaceholder='always'>
-                                <input placeholder="Até" matInput
-                                       name="to" type="datetime"
-                                       (change)="changeRange()"
-                                       [(ngModel)]="maxRange"
-                                       [owlDateTime]="to">
-                                <mat-icon matSuffix class="trigger"
-                                          [owlDateTimeTrigger]="to">schedule</mat-icon>
-                                <owl-date-time #to></owl-date-time>
-                            </mat-form-field> 
-                        </div>            
                     </div>
                 </mat-expansion-panel>                
                 <mat-accordion fxFlexFill cdkScrollable>
@@ -129,11 +115,14 @@
                         <div fxLayout="column" fxLayoutAlign="start">
                             <div fxFlex fxLayout="row" fxLayoutAlign="space-between center" class="vessel-actions">
                                 <a [routerLink]="'/vessels/'+v.vessel_id">detalhes</a>
+                                <span fxFlex></span>
                                 <button mat-icon-button matTooltip="Localizar"
-                                        (click)="seek(v)"><mat-icon>pin_drop</mat-icon></button>
+                                        (click)="seek(v)"><mat-icon>find_in_page</mat-icon></button>
+                                <button mat-icon-button matTooltip="Selecionar"
+                                        (click)="show(v)"><mat-icon>pin_drop</mat-icon></button>
                             </div>
                             <mat-checkbox [checked]="true" (change)="markers($event,v)">Mostrar no Mapa</mat-checkbox>
-                            <mat-checkbox (change)="tracks($event,v)">Traçar Rota</mat-checkbox>
+<!--                            <mat-checkbox (change)="tracks($event,v)">Traçar Rota</mat-checkbox>-->
                         </div>
                     </mat-expansion-panel>
                 </mat-accordion>
@@ -146,6 +135,45 @@
             <div class="fabs">
                 <button mat-fab (click)="menu.open()"><mat-icon>menu</mat-icon></button>
                 <button mat-fab (click)="reset()"><mat-icon>gps_fixed</mat-icon></button>
+
+                <rb-fab-speed-dial mode="scale" openIcon="edit" direction="down">
+                    <button mat-mini-fab rbFabItem (click)="tool('none')">
+                        <mat-icon>call_made</mat-icon>
+                    </button>
+                    <button mat-mini-fab rbFabItem (click)="tool('query')">
+                        <mat-icon>question</mat-icon>
+                    </button>
+                    <button mat-mini-fab rbFabItem (click)="tool('select')">
+                        <mat-icon>details</mat-icon>
+                    </button>
+                    <button mat-mini-fab rbFabItem  (click)="tool('measureLine')">
+                        <mat-icon>timeline</mat-icon>
+                    </button>
+                    <button mat-mini-fab rbFabItem (click)="tool('measurePoly')">
+                        <mat-icon>aspect_ratio</mat-icon>
+                    </button>
+                    <button mat-mini-fab rbFabItem  (click)="tool('drawLine')">
+                        <mat-icon>timeline</mat-icon>
+                    </button>
+                    <button mat-mini-fab rbFabItem (click)="tool('drawPoly')">
+                        <mat-icon>aspect_ratio</mat-icon>
+                    </button>
+                    <button mat-mini-fab rbFabItem (click)="tool('save')">
+                        <mat-icon>save</mat-icon>
+                    </button>
+                    <button mat-mini-fab rbFabItem  (click)="tool('edit')" *nyxAuth="'map:all'">
+                        <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-mini-fab rbFabItem (click)="tool('remove')" *nyxAuth="'map:all'">
+                        <mat-icon>remove</mat-icon>
+                    </button>
+                    <button mat-mini-fab rbFabItem  (click)="tool('move')" *nyxAuth="'map:all'">
+                        <mat-icon>pan_tool</mat-icon>
+                    </button>
+                    <button mat-mini-fab rbFabItem (click)="tool('clear')">
+                        <mat-icon>clear</mat-icon>
+                    </button>
+                </rb-fab-speed-dial>
             </div>
         </div>    
         <div id="popup" class="ol-popup" fxLayout="column">
@@ -156,12 +184,28 @@
                 {{[selected?.lon, selected?.lat] | latLon}}
             </span>
             <span *ngIf="selected?.sog !== null && selected?.head !== null">
-                {{selected?.sog * 1852/3600}} kn &ang;  {{selected?.head}}&deg; ({{selected?.head|headTo}})
+                {{selected?.sog * 1852/3600|number:'1.0-1'}} kn &ang;  {{selected?.head|number:'1.0-1'}}&deg; ({{selected?.head|headTo}})
             </span>
             <span>
                 {{selected?.lastseen | amLocal | amDateFormat: 'HH:mm DD/MMM'}}
                 <small>({{selected?.lastseen | amTimeAgo}})</small>        
-            </span>        
+            </span>   
+            <button (click)="dropTrack(selected)">Limpar</button>
+            <button (click)="showTrack(selected)">Rota</button>
+            <input fxFlex type="text" 
+                   linkedCalendars="false"
+                   [ranges]="ranges"
+                   [showClearButton]="true"
+                   placeholder="No Período"
+                   ngxDaterangepickerMd [(ngModel)]="selected.range" class="form-control" 
+                   (change)="changeRange(selected)"/>
+
+            <input fxFlex="3em"
+                   (colorPickerChange)="changeColor(selected)"
+                   [cpOKButton]="true"
+                   [cpCancelButton]="true"
+                   [(colorPicker)]="selected.color" 
+                   [style.background-color]="selected.color"/>
         </div>
     </mat-drawer-content>
 </mat-drawer-container>

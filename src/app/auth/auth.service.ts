@@ -66,6 +66,15 @@ export class AuthService {
         return this.profile$.asObservable()
                     .pipe(filter(x => !!x), pluck('user_metadata'));
     }
+    
+    
+    ///////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////
+    public settings(load) : Observable<any> {
+        return this.profile$
+            .pipe(flatMap( p => this.http.put (environment.baseURL+`/users/${p.user_id}`, 
+                                        { user_metadata: load} )));
+    }
 
     public get appId(): string {
         return environment.clientId;

@@ -48,10 +48,24 @@
     <mat-tab label="Identidade">
         <form [formGroup]="form" fxFlexFill fxLayout="column">
             <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
-                <mat-form-field floatPlaceholder='always' fxFlex="55%">
+                <mat-form-field floatPlaceholder='always' fxFlex="25%">
                     <input matInput required formControlName="person_name" placeholder="Nome">
                 </mat-form-field>
-                <mat-form-field floatPlaceholder='always' fxFlex="20%">
+                
+
+                <mat-form-field floatPlaceholder='always' fxFlex="25%">
+                    <mat-select placeholder="Área" required
+                                formControlName="area_id">
+                        <mat-option name="areas" *ngFor="let a of areas" [value]="a.geometry_id">
+                        {{ a.geometry_name }}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+                <mat-checkbox fxFlex="20%" formControlName="master">Mestre</mat-checkbox>
+            </div>
+            
+            <div fxFlex fxLayout="row" fxLayoutAlign="space-between">
+                <mat-form-field floatPlaceholder='always' fxFlex="25%">
                     <input matInput formControlName="cpf" placeholder="C.P.F.">
                 </mat-form-field>
                 <mat-form-field floatPlaceholder='always' fxFlex="20%">
@@ -67,11 +81,9 @@
                 <mat-form-field floatPlaceholder='always' fxFlex="25%">
                     <input matInput formControlName="rgi_number" placeholder="R.G.I.">
                 </mat-form-field>
-
                 <mat-form-field floatPlaceholder='always' fxFlex="25%">
                     <input matInput formControlName="rgi_issuer" placeholder="emissor">
                 </mat-form-field>
-
                 <mat-form-field floatPlaceholder='always' fxFlex="20%">
                     <input matInput placeholder="Emitido em" 
                            [matDatepicker]="rgi_issued" 
@@ -79,7 +91,6 @@
                     <mat-datepicker-toggle matSuffix [for]="rgi_issued"></mat-datepicker-toggle>
                     <mat-datepicker #rgi_issued></mat-datepicker>
                 </mat-form-field> 
-
                 <mat-form-field floatPlaceholder='always' fxFlex="20%">
                     <input matInput placeholder="Valido até" 
                            [matDatepicker]="rgi_expire" 
@@ -103,7 +114,6 @@
                     <mat-datepicker-toggle matSuffix [for]="ric_issued"></mat-datepicker-toggle>
                     <mat-datepicker #ric_issued></mat-datepicker>
                 </mat-form-field> 
-
                 <mat-form-field floatPlaceholder='always' fxFlex="20%">
                     <input matInput placeholder="Valido até" 
                            [matDatepicker]="ric_expire" 
@@ -112,31 +122,14 @@
                     <mat-datepicker #ric_expire></mat-datepicker>
                 </mat-form-field> 
             </div>
-
-
-            <div fxFlex fxLayout="row" fxLayoutAlign="space-between center">
-                <mat-form-field floatPlaceholder='always' fxFlex="40%">
-                    <mat-select placeholder="Cliente"
-                                formControlName="client_id">
-                        <mat-option name="clients" *ngFor="let c of clients" [value]="c.client_id">
-                        {{ c.client_name }}
-                        </mat-option>
-                    </mat-select>
-                </mat-form-field>
-            </div>
-            
-            
             
             <div fxFlex fxLayout="row" fxLayoutAlign="space-between center">
                 <mat-form-field floatPlaceholder='always' fxFlex="25%">
                     <input matInput formControlName="rgp_number" placeholder="R.G.P.">
                 </mat-form-field>
-<!--
-                <mat-form-field floatPlaceholder='always' fxFlex="20%">
+                <mat-form-field floatPlaceholder='always' fxFlex="25%">
                     <input matInput formControlName="rgp_permit" placeholder="Categoria">
                 </mat-form-field>
--->
-                <mat-checkbox fxFlex="25%" formControlName="master">Mestre</mat-checkbox>
                 <mat-form-field floatPlaceholder='always' fxFlex="20%">
                     <input matInput placeholder="Emitido em" 
                            [matDatepicker]="rgp_issued" 
