@@ -40,14 +40,18 @@ const options =  getopt.configure([
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-console.log(process.env);
+//console.log(process.env);
 
 options.pgConn = {
-	user:     process.env.PG_USER,
-	host:     process.env.PG_HOST,
-	database: process.env.PG_DB,
-    password: process.env.PG_PASS,
+	user:     'inkas',
+	host:     'pesus-db',
+	database: 'inkas',
+    password: 'desg44',
+//	user:     process.env.PG_USER,
+//	host:     process.env.PG_HOST,
+//	database: process.env.PG_DB,
+//    password: process.env.PG_PASS,
 };
 
-options.knex = require('knex')({client: 'pg', connection: options.pgConn, debug: false });
+options.knex = require('knex')({client: 'pg', connection: options.pgConn, debug: true });
 module.exports = options;

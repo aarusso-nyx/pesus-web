@@ -4,10 +4,10 @@ EXPOSE 4040
 
 ENV APP_PORT='4040'
 ENV APP_NAME='PESUS => inkas:docker'
-ENV PG_DB='inkas'
-ENV PG_USER='inkas'
-ENV PG_HOST='pesus-db'
-ENV PG_PASS='desg44'
+# ENV PG_DB='inkas'
+# ENV PG_USER='inkas'
+# ENV PG_HOST='pesus-db'
+# ENV PG_PASS='desg44'
 
 RUN npm install pm2 @angular/cli -g
 
