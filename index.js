@@ -75,6 +75,11 @@ if ( options.auth ) {
     console.log( chalk.bold.yellow('Auth Enabled') );
 }
 
+// Serve Angular dist dir
+const appDist = './app/dist';
+if ( fs.existsSync(appDist) ) {
+    srv.use('/', express.static(appDist, {maxAge: options.cacheAge} ));
+}
  
 // Serve API
 const appAPI   = './api';

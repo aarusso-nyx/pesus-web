@@ -32,5 +32,13 @@ services:
     depends_on:
       - pesus-db
       
+    environment:
+      - APP_PORT='4040'
+      - APP_NAME='PESUS => inkas:docker'
+      - PG_HOST='pesus-db'
+      - PG_DB='inkas'
+      - PG_USER='inkas'
+      - PG_PASS='desg44'
+      
 networks:
   backend:
