@@ -23,7 +23,7 @@ RUN npm install
 WORKDIR /usr/inkas/pesus/app
 RUN npm install 
 
-RUN ng build --prod 
+RUN ng build --prod || true 
 
 WORKDIR /usr/inkas/pesus
 
