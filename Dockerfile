@@ -13,14 +13,15 @@ RUN useradd -ms /bin/bash -d /usr/inkas inkas
 USER inkas
 
 WORKDIR /usr/inkas
-RUN git clone https://github.com/aarusso-nyx/pesus.git
+RUN git clone https://github.com/aarusso-nyx/pesus-web.git pesus
 
 WORKDIR /usr/inkas/pesus
 RUN npm install 
 
 WORKDIR /usr/inkas/pesus/app
-RUN rm -Rf src
-RUN git clone https://github.com/aarusso-nyx/pesus-web.git dist
+RUN npm install 
+
+RUN ./node_modules/.bin/ng build --prod 
 
 WORKDIR /usr/inkas/pesus
 
