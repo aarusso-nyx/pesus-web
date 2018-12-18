@@ -9,6 +9,8 @@ ENV PG_USER='inkas'
 ENV PG_HOST='pesus-db'
 ENV PG_PASS='desg44'
 
+RUN npm install pm2 @angular/cli -g
+
 RUN useradd -ms /bin/bash -d /usr/inkas inkas
 USER inkas
 
@@ -21,8 +23,8 @@ RUN npm install
 WORKDIR /usr/inkas/pesus/app
 RUN npm install 
 
-RUN ./node_modules/.bin/ng build --prod 
+RUN ng build
 
 WORKDIR /usr/inkas/pesus
 
-CMD ["node", "index.js"]
+CMD ["pm2-runtime", "index.js"]

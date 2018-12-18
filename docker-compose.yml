@@ -18,7 +18,7 @@ services:
       POSTGRES_USER: inkas
           
   app:
-    image: aarusso/inkas-pesus
+    image: pesus/seapa
           
     ports:
       - 4040:4040
