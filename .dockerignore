@@ -1,0 +1,4 @@
+.DS_Store
+.node-persist 
+node_modules
+npm-debug.log
