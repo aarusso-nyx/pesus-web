@@ -1,0 +1,36 @@
+version: "3"
+services:
+
+  pesus-db:
+    image: mdillon/postgis
+          
+    networks: 
+      - backend
+
+    expose:
+      - 5432
+            
+    ports:
+      - 5432:5432
+      
+    environment:
+      POSTGRES_PASSWORD: desg44
+      POSTGRES_USER: inkas
+          
+  app:
+    image: aarusso/inkas-pesus
+          
+    ports:
+      - 4040:4040
+      
+    expose:
+      - 4040
+            
+    networks: 
+      - backend
+
+    depends_on:
+      - pesus-db
+      
+networks:
+  backend:
